@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stretto - Ensimag 2016</title>
+    <!-- Boostrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/style.css">
+    <!-- Bootstrap -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+</head>
+<body class="container">
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <span class="navbar-brand">Stretto</span>
+            </div>
+            <p class="navbar-text ">Text editor from the 22th century</p>
+        </div>
+
+    </nav>
+
+    <div class="jumbotron">
+        <div class="row">
+
+            <div class="col-md-6 col-xs-12">
+
+                <h1>Stretto</h1>
+                <h2>Un éditeur venu du futur</h2>
+                <p>Découvrez pourquoi ce projet de spécialité est fait pour vous.</p>
+            </div>
+            <div class="col-md-6 col-xs-12">
+                <img src="./img/computer.jpg" style="width:100%" alt="Un aperçu de Stretto">
+            </div>
+        </div>
+    </div>
+    <h2>Contexte du projet Stretto</h2>
+    <p>
+        L'idée de Stretto est née d'un constat simple : aujourd'hui, en 2016, de
+        nombreux développeurs n'arrivent pas à trouver un éditeur de texte qui leur convient.
+    </p>
+    <p>
+        En particulier, beaucoup apprécient l'efficacité de Vim, avec son fonctionnement
+        par modes, mais sont rebutés par son archaïsme notoire. A contrario, des éditeurs
+        modernes comme Atom ou Sublime Text fournissent des interfaces bien plus intuitives,
+        mais ont tendances à perdre en efficacité, en généralité, ou tout simplement à
+        ne pas être Open Source.
+    </p>
+    <p>
+        On ne parlera pas ici des IDE comme Eclipse et Netbeans, le temps qu'ils démarrent,
+        vous aurez fini de lire cette page depuis longtemps.
+    </p>
+    <p>
+        <strong>Stretto, c'est donc la solution à tous ces problèmes.</strong>
+    </p>
+    <p>
+        En fonction des résultats de votre travail, le projet Stretto pourra devenir
+        un projet Open Source à part entière et être maintenu sur le long terme,
+        et éventuellement donner naissance à un projet de création de Start-up.
+    </p>
+    <h2>Encadrement</h2>
+    <p>
+        Vous aurez le plaisir de travailler avec moi-même (Eric Burel), étudiant en 3A MMIS.
+        Je réalise en ce moment mon projet de fin d'études sur mon projet de création d'entreprise,
+        <a href="http://www.stoulou.com">Stoulou.com</a>, en tant qu'étudiant-entrepreneur.
+    </p>
+    <p>
+        Stretto est un side-project, dont je souhaite tester le concept durant les prochains mois.
+        N'hésitez pas à me contacter si vous souhaitez en savoir plus sur la création
+        d'entreprise innovante.
+    </p>
+    <h2>Objectif</h2>
+    <p>
+        L'objectif de ce projet de spécialité est d'implémenter une première version de Stretto,
+        en langage Go.
+    </p>
+    <p>
+        Votre implémentation devra être la plus générale possible et prendre en compte
+        les enjeux long terme du projet.
+    </p>
+    <p>
+        Stretto doit être conçu pour améliorer la productivité des développeurs.
+        Tout comme Vim, Stretto reposera donc sur un système de modes. Ce fonctionnement permet
+        de séparer les tâches d'écriture du code, de refactoring, de gestion des fichiers etc.
+        et de démultiplier les raccourcis.
+    </p>
+    <p>
+        <table class="table">
+            <caption>Un exemple de raccourcis variant selon le mode</caption>
+            <thead><th>Raccourci</th><th>Mode insertion</th><th>Mode fichier</th><th>Mode édition</th></thead>
+            <tr><td>s</td><td>la lettre s</td><td>sauvegarder fichier</td><td>substituer mot</td></tr>
+            <tr><td>o</td><td>la lettre o</td><td>ouvrir fichier</td><td>ouvrir nouvelle ligne</td></tr>
+        </table>
+    </p>
+    <p>
+        Le but n'est pas de créer une
+        copie de Vim en langage Go, mais bien de un nouvel éditeur. Utilisez donc
+        Vim comme une source d'inspiration et non comme un calque. Pour les
+        fonctionnalités modernes, vous pourrez vous intéresser à Atom et Sublime Text,
+        qui sont de bons exemples.
+    </p>
+    <p>
+        Votre projet incluera donc une phase de conception. Je recommande lourdement
+        le travail en agilité (je trouvais ça inutile en 2A, je vous expliquerai
+        pourquoi j'avais tort), et je conseille Trello ou Asana pour gérer vos tâches.
+    </p>
+
+    <h2>Contraintes</h2>
+    <p>
+        Votre logiciel devra respecter les contraintes suivantes :
+        <ul>
+            <li>être écrit entièrement en anglais, documentation et raccourcis (s pour save) inclus</li>
+            <li>être programmé en golang (le langage du futur)</li>
+            <li>être accompagné d'une documentation complète : code (succinte, car en bon ensimag vous choisirez déjà des noms de fonctions clairs et précis),
+                manuel utilisateur, et description de vos choix architecturaux et techniques
+            </li>
+            <li>être entièrement testé (non négociable, on pourra discuter ensemble des joies du TDD)</li>
+            <li>être extensible : il doit être possible d'écrire et ajouter des plugins aisément</li>
+            <li>être configurable : voir le fonctionnement de Sublime et le fichier .vimrc pour ce point (vous pouvez faire beaucoup mieux !)</li>
+            <li>inclure un plugin (donc désactivable, supprimable, et réactivable) pour la gestion du langage golang</li>
+            <li>Bonus : vous pourrez tentez d'ajouter des plugins pour la gestion du HTML, CSS,
+                JavaScript</li>
+            </ul>
+        </p>
+        <h2>Equipe</h2>
+        <p>
+            Quatre/cinq étudiants semble l'idéal, le projet est copieux et peut se diviser en parties plus ou moins indépendantes (coeur, API pour les plugins, raccourcis, interface graphique etc.).
+            De même, une à deux équipes semble être optimal.
+        </p>
+        <h2>Contact</h2>
+        <p>
+            Une question ? Envoyez moi un mail sur l'adresse <a href="mailto:eric.burel@ensimag.grenoble-inp.fr">eric.burel@ensimag.grenoble-inp.fr</a>.</p>
+        </body>
+        </html>
