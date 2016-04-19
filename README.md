@@ -1,2 +1,2 @@
 # stretto
-An editor right from the 22th century
+An editor right from the 22nd century
