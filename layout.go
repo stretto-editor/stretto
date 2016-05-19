@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/jroimartin/gocui"
+
 	"io/ioutil"
 	"os"
+
+	"github.com/jroimartin/gocui"
 )
 
 func layout(g *gocui.Gui) error {
@@ -16,7 +18,6 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 
-		v.Highlight = true
 		v.Editable = true
 		v.Wrap = true
 
@@ -24,14 +25,13 @@ func layout(g *gocui.Gui) error {
 		if len(os.Args) >= 2 {
 			openFile(v, os.Args[1])
 		}
+		if err := g.SetCurrentView("main"); err != nil {
+			return err
+		}
 	}
 
 	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil &&
 		err != gocui.ErrUnknownView {
-		return err
-	}
-
-	if err := g.SetCurrentView("main"); err != nil {
 		return err
 	}
 
