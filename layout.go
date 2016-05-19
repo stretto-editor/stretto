@@ -2,18 +2,16 @@ package main
 
 import (
 	"fmt"
-
+	"github.com/jroimartin/gocui"
 	"io/ioutil"
 	"os"
-
-	"github.com/jroimartin/gocui"
 )
 
 func layout(g *gocui.Gui) error {
 
 	maxX, maxY := g.Size()
 
-	if v, err := g.SetView("main", -1, -1, maxX, maxY-5); err != nil {
+	if v, err := g.SetView("main", -1, -1, maxX, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -30,9 +28,15 @@ func layout(g *gocui.Gui) error {
 		}
 	}
 
-	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil &&
-		err != gocui.ErrUnknownView {
-		return err
+	w_cmdl, h_cmdl := 30, 2
+	var x_cmdl, y_cmdl int = (maxX - w_cmdl) / 2, maxY - h_cmdl - 5
+	if v, err := g.SetView("cmdline", x_cmdl, y_cmdl, x_cmdl+w_cmdl, y_cmdl+h_cmdl); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Editable = true
+		fmt.Fprint(v, "cmdline")
+		g.SetViewOnTop("main")
 	}
 
 	return nil
