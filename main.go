@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/jroimartin/gocui"
 )
@@ -12,6 +13,10 @@ import (
 func main() {
 	flag.Usage = usage
 	flag.Parse()
+
+	if e := createArgFileIfNotExists(); e != nil {
+		log.Panicln(e)
+	}
 
 	g := gocui.NewGui()
 	if err := g.Init(); err != nil {
@@ -31,7 +36,26 @@ func main() {
 }
 
 func usage() {
-	fmt.Printf("stretto [file1]")
+	fmt.Printf("stretto [file1]\n")
 	flag.PrintDefaults()
 	os.Exit(1)
+}
+
+func createArgFileIfNotExists() (err error) {
+	argsWithoutProg := os.Args[1:]
+	var filename string
+	for _, s := range argsWithoutProg {
+		if !strings.HasPrefix(s, "-") {
+			filename = s
+			break
+		}
+	}
+	if filename != "" {
+		if _, err = os.Stat(filename); os.IsNotExist(err) {
+			var file *os.File
+			file, err = os.Create(filename)
+			file.Close()
+		}
+	}
+	return
 }
