@@ -1,14 +1,19 @@
 package main
 
 import (
+	"encoding/binary"
+	"io"
+	"os"
+
 	"github.com/jroimartin/gocui"
 )
+
+var currentFile string
 
 func initKeybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		return err
 	}
-
 	if err := g.SetKeybinding("", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("cmdline")); err != nil {
 		return err
 	}
@@ -26,6 +31,9 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyPgdn, gocui.ModNone, goPgDown); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("main", gocui.KeyCtrlS, gocui.ModNone, saveMain); err != nil {
 		return err
 	}
 	return nil
@@ -90,6 +98,38 @@ func goPgDown(g *gocui.Gui, v *gocui.View) error {
 			return err
 		}
 		v.MoveCursor(0, 0, false)
+	}
+	return nil
+}
+
+func saveMain(g *gocui.Gui, v *gocui.View) error {
+	if currentFile == "" {
+		return nil
+	}
+	f, err := os.OpenFile(currentFile, os.O_WRONLY, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	p := make([]byte, 5)
+	v.Rewind()
+	var size int64 = -1
+	for {
+		n, err := v.Read(p)
+		size += int64(n)
+		if n > 0 {
+			if _, er := f.Write(p[:n]); err != nil {
+				return er
+			}
+		}
+		if err == io.EOF {
+			f.Truncate(size * int64(binary.Size(p[0])))
+			break
+		}
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

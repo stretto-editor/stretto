@@ -22,6 +22,7 @@ func layout(g *gocui.Gui) error {
 		// check if there is a second argument
 		if len(os.Args) >= 2 {
 			openFile(v, os.Args[1])
+			currentFile = os.Args[1]
 		}
 		if err := g.SetCurrentView("main"); err != nil {
 			return err
