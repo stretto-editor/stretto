@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jroimartin/gocui"
+	"github.com/stretto-editor/gocui"
 )
 
 func main() {

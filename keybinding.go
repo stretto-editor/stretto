@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/jroimartin/gocui"
+	"github.com/stretto-editor/gocui"
 )
 
 var currentFile string

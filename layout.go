@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/jroimartin/gocui"
 	"io/ioutil"
 	"os"
+
+	"github.com/stretto-editor/gocui"
 )
 
 func layout(g *gocui.Gui) error {
