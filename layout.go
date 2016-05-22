@@ -22,7 +22,9 @@ func layout(g *gocui.Gui) error {
 
 		// check if there is a second argument
 		if len(os.Args) >= 2 {
-			openFile(v, os.Args[1])
+			if err := openFile(v, os.Args[1]); err != nil {
+				return err
+			}
 			currentFile = os.Args[1]
 		}
 		if err := g.SetCurrentView("main"); err != nil {
@@ -55,7 +57,7 @@ func openFile(v *gocui.View, name string) error {
 	f, err := ioutil.ReadFile(name)
 	// inexisting file
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Fprintf(v, "%s", f)
