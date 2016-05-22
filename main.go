@@ -33,7 +33,8 @@ func main() {
 	g.Cursor = true
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		log.Panicln(err)
+		g.Close()
+		log.Fatalln(err)
 	}
 }
 

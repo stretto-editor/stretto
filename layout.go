@@ -22,7 +22,9 @@ func layout(g *gocui.Gui) error {
 
 		// check if there is a second argument
 		if len(os.Args) >= 2 {
-			openFile(v, os.Args[1])
+			if err := openFile(v, os.Args[1]); err != nil {
+				return err
+			}
 			currentFile = os.Args[1]
 		}
 		if err := g.SetCurrentView("main"); err != nil {
@@ -30,14 +32,25 @@ func layout(g *gocui.Gui) error {
 		}
 	}
 
-	w_cmdl, h_cmdl := 30, 2
-	var x_cmdl, y_cmdl int = (maxX - w_cmdl) / 2, maxY - h_cmdl - 5
-	if v, err := g.SetView("cmdline", x_cmdl, y_cmdl, x_cmdl+w_cmdl, y_cmdl+h_cmdl); err != nil {
+	wcmd, hcmd := 30, 2
+	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY - hcmd - 5
+	if v, err := g.SetView("cmdline", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 		v.Editable = true
 		fmt.Fprint(v, "cmdline")
+		g.SetViewOnTop("main")
+	}
+
+	winput, hinput := maxX*80/100, 2
+	var xinput, yinput int = (maxX - winput) / 2, maxY/2 - hinput/2
+	if v, err := g.SetView("inputline", xinput, yinput, xinput+winput, yinput+hinput); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Editable = true
+		fmt.Fprint(v, "input")
 		g.SetViewOnTop("main")
 	}
 
@@ -55,7 +68,7 @@ func openFile(v *gocui.View, name string) error {
 	f, err := ioutil.ReadFile(name)
 	// inexisting file
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Fprintf(v, "%s", f)
