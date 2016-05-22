@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/stretto-editor/gocui"
 )
@@ -51,7 +52,9 @@ func initKeybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding(fileMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(editMode)); err != nil {
 		return err
 	}
-
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlF, gocui.ModNone, search); err != nil {
+		return err
+	}
 	if err := g.SetKeybinding(editMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(fileMode)); err != nil {
 		return err
 	}
@@ -179,6 +182,38 @@ func saveMain(g *gocui.Gui, v *gocui.View) error {
 		}
 		if err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func search(g *gocui.Gui, v *gocui.View) error {
+	var s string
+	var err error
+	var sameline = 1
+
+	x, y := v.Cursor()
+
+	for i := 0; err == nil; i++ {
+		s, err = v.Line(y + i)
+		if err == nil {
+			// size of line is long enough to move the cursor
+			if x < len(s)-1 {
+				indice := strings.Index(s[x+sameline:], "deux") // string will be taken into parameter after refactoring structure
+
+				// existing element on this line
+				if indice >= 0 {
+					if sameline == 0 {
+						x, y = v.Cursor()
+						v.MoveCursor(indice+sameline-x, i, false)
+					} else {
+						v.MoveCursor(indice+sameline, i, false)
+					}
+					return nil
+				}
+			}
+			x = 0
+			sameline = 0
 		}
 	}
 	return nil
