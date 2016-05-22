@@ -235,6 +235,15 @@ func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
 }
 
 func search(g *gocui.Gui, v *gocui.View) error {
+	go searchInteractive(g, v)
+	return nil
+}
+
+func searchInteractive(g *gocui.Gui, v *gocui.View) error {
+	currTopViewHandler("inputline")(g, v)
+	g.CurrentView().MoveCursor(0, 0, false)
+	in.channel <- 1
+
 	var s string
 	var err error
 	var sameline = 1
@@ -246,7 +255,8 @@ func search(g *gocui.Gui, v *gocui.View) error {
 		if err == nil {
 			// size of line is long enough to move the cursor
 			if x < len(s)-1 {
-				indice := strings.Index(s[x+sameline:], "deux") // string will be taken into parameter after refactoring structure
+				indice := strings.Index(s[x+sameline:], in.content) // string will be taken into parameter after refactoring structure
+				fmt.Print(in.content)
 
 				// existing element on this line
 				if indice >= 0 {
