@@ -10,52 +10,56 @@ import (
 
 var currentFile string
 
+var fileMode = "file"
+var editMode = "edit"
+var cmdMode = "cmd"
+
 func initModes(g *gocui.Gui) {
-	g.SetMode("cmd")
-	g.SetMode("file")
-	g.SetMode("edit")
+	g.SetMode(cmdMode)
+	g.SetMode(fileMode)
+	g.SetMode(editMode)
 }
 
 func initKeybindings(g *gocui.Gui) error {
-	if err := g.SetKeybinding("file", "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("cmdline")); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("cmdline")); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "cmdline", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("main")); err != nil {
+	if err := g.SetKeybinding(fileMode, "cmdline", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("main")); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "", gocui.KeyHome, gocui.ModNone, cursorHome); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyHome, gocui.ModNone, cursorHome); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "", gocui.KeyEnd, gocui.ModNone, cursorEnd); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyEnd, gocui.ModNone, cursorEnd); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "", gocui.KeyPgup, gocui.ModNone, goPgUp); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyPgup, gocui.ModNone, goPgUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "", gocui.KeyPgdn, gocui.ModNone, goPgDown); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyPgdn, gocui.ModNone, goPgDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "main", gocui.KeyCtrlS, gocui.ModNone, saveMain); err != nil {
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlS, gocui.ModNone, saveMain); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("file", "main", gocui.KeyTab, gocui.ModNone, switchModeTo("edit")); err != nil {
-		return err
-	}
-
-	if err := g.SetKeybinding("edit", "main", gocui.KeyTab, gocui.ModNone, switchModeTo("file")); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("edit", "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(editMode)); err != nil {
 		return err
 	}
 
-	g.SetCurrentMode("file")
+	if err := g.SetKeybinding(editMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(fileMode)); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding(editMode, "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+		return err
+	}
+
+	g.SetCurrentMode(fileMode)
 
 	return nil
 }
