@@ -16,6 +16,13 @@ var fileMode = "file"
 var editMode = "edit"
 var cmdMode = "cmd"
 
+type input struct {
+	channel chan int
+	content string
+}
+
+var in input
+
 func initModes(g *gocui.Gui) {
 	g.SetMode(cmdMode)
 	g.SetMode(fileMode)
@@ -23,6 +30,8 @@ func initModes(g *gocui.Gui) {
 }
 
 func initKeybindings(g *gocui.Gui) error {
+	in.channel = make(chan int)
+
 	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		return err
 	}
@@ -61,6 +70,13 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlA, gocui.ModNone, getInput); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding(fileMode, "inputline", gocui.KeyEnter, gocui.ModNone, validateInput); err != nil {
+		return err
+	}
+
 	g.SetCurrentMode(fileMode)
 
 	return nil
@@ -68,6 +84,32 @@ func initKeybindings(g *gocui.Gui) error {
 
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
+}
+
+func getInput(g *gocui.Gui, v *gocui.View) error {
+	go functionnality(g, v)
+	return nil
+}
+
+func functionnality(g *gocui.Gui, v *gocui.View) error {
+	currTopViewHandler("inputline")(g, v)
+	g.CurrentView().MoveCursor(0, 0, false)
+	in.channel <- 1
+	for _, c := range in.content {
+		v.EditWrite(c)
+	}
+	return nil
+}
+
+func validateInput(g *gocui.Gui, v *gocui.View) error {
+	in.content = v.Buffer()
+	v.Clear()
+	if err := currTopViewHandler("main")(g, v); err != nil {
+		return err
+	}
+	g.CurrentView().MoveCursor(0, 0, false) // Bad way to update
+	<-in.channel
+	return nil
 }
 
 func switchModeTo(name string) gocui.KeybindingHandler {

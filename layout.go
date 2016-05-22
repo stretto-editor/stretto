@@ -43,6 +43,17 @@ func layout(g *gocui.Gui) error {
 		g.SetViewOnTop("main")
 	}
 
+	winput, hinput := maxX*80/100, 2
+	var xinput, yinput int = (maxX - winput) / 2, maxY/2 - hinput/2
+	if v, err := g.SetView("inputline", xinput, yinput, xinput+winput, yinput+hinput); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Editable = true
+		fmt.Fprint(v, "input")
+		g.SetViewOnTop("main")
+	}
+
 	return nil
 }
 
