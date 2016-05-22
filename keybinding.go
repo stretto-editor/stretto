@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/stretto-editor/gocui"
 )
@@ -45,7 +47,7 @@ func initKeybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding(fileMode, "", gocui.KeyPgdn, gocui.ModNone, goPgDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlS, gocui.ModNone, saveMain); err != nil {
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlS, gocui.ModNone, save); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(fileMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(editMode)); err != nil {
@@ -152,12 +154,16 @@ func goPgDown(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func saveMain(g *gocui.Gui, v *gocui.View) error {
-	if currentFile == "" {
+func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
+	if filename == "" {
 		return nil
 	}
-	f, err := os.OpenFile(currentFile, os.O_WRONLY, 0666)
+	f, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "permission denied") {
+			fmt.Fprintf(os.Stdout, "erreur")
+			return nil
+		}
 		return err
 	}
 	defer f.Close()
@@ -183,3 +189,8 @@ func saveMain(g *gocui.Gui, v *gocui.View) error {
 	}
 	return nil
 }
+
+func save(g *gocui.Gui, v *gocui.View) error {
+	return saveMain(g, v, currentFile)
+}
+
