@@ -80,9 +80,7 @@ func switchModeTo(name string) gocui.KeybindingHandler {
 			v.Clear()
 		}
 		if name == "cmd" {
-			if err := g.SetCurrentView(name); err != nil {
-				return err
-			}
+			g.SetCurrentView("cmdline")
 		}
 		return nil
 	}
