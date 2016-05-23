@@ -50,7 +50,7 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Editable = true
-		fmt.Fprint(v, "input")
+		fmt.Fprint(v, "")
 		g.SetViewOnTop("main")
 	}
 
