@@ -168,14 +168,18 @@ func goPgUp(g *gocui.Gui, v *gocui.View) error {
 		_, y := v.Size()
 		yOffset := oy - y
 		if yOffset < 0 {
-			v.SetOrigin(ox, 0)
+			if err := v.SetOrigin(ox, 0); err != nil {
+				return err
+			}
 			if oy == 0 {
 				_, cy := v.Cursor()
 				v.MoveCursor(0, -cy, false)
+			} else {
+				v.MoveCursor(0, 0, false)
 			}
 		} else {
 			v.SetOrigin(ox, yOffset)
-			v.MoveCursor(0, -yOffset, false)
+			v.MoveCursor(0, 0, false)
 		}
 	}
 	return nil
@@ -185,11 +189,18 @@ func goPgDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		ox, oy := v.Origin()
 		_, y := v.Size()
-		err := v.SetOrigin(ox, oy+y)
-		if err != nil {
-			return err
+		_, cy := v.Cursor()
+		if y >= v.BufferSize() {
+			v.MoveCursor(0, y-cy, false)
+		} else if oy >= v.BufferSize()-y {
+			v.MoveCursor(0, y, false)
+		} else if oy+2*y >= v.BufferSize() {
+			v.SetOrigin(ox, v.BufferSize()-y+1)
+			v.MoveCursor(0, 0, false)
+		} else {
+			v.SetOrigin(ox, oy+y)
+			v.MoveCursor(0, 0, false)
 		}
-		v.MoveCursor(0, 0, false)
 	}
 	return nil
 }
@@ -233,4 +244,3 @@ func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
 func save(g *gocui.Gui, v *gocui.View) error {
 	return saveMain(g, v, currentFile)
 }
-

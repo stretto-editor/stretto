@@ -18,7 +18,7 @@ func layout(g *gocui.Gui) error {
 		}
 
 		v.Editable = true
-		v.Wrap = true
+		// v.Wrap = true
 
 		// check if there is a second argument
 		if len(os.Args) >= 2 {
