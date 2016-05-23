@@ -33,16 +33,19 @@ func initModes(g *gocui.Gui) {
 func initKeybindings(g *gocui.Gui) error {
 	in.channel = make(chan int)
 
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(editMode)); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding(editMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(fileMode)); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("cmdline")); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(fileMode, "cmdline", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("main")); err != nil {
+	if err := g.SetKeybinding(editMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(fileMode, "", gocui.KeyHome, gocui.ModNone, cursorHome); err != nil {
@@ -57,34 +60,31 @@ func initKeybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding(fileMode, "", gocui.KeyPgdn, gocui.ModNone, goPgDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlS, gocui.ModNone, save); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("cmdline")); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(editMode)); err != nil {
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlS, gocui.ModNone, save); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlF, gocui.ModNone, search); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(editMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(fileMode)); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(editMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
-		return err
-	}
-
 	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlA, gocui.ModNone, getInput); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(fileMode, "inputline", gocui.KeyEnter, gocui.ModNone, validateInput); err != nil {
-		return err
-	}
-
 	if err := g.SetKeybinding(editMode, "main", gocui.KeyCtrlC, gocui.ModNone, copy); err != nil {
 		return err
 	}
-
 	if err := g.SetKeybinding(editMode, "main", gocui.KeyCtrlV, gocui.ModNone, paste); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlP, gocui.ModNone, replace); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding(fileMode, "cmdline", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("main")); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding(fileMode, "inputline", gocui.KeyEnter, gocui.ModNone, validateInput); err != nil {
 		return err
 	}
 
@@ -261,40 +261,43 @@ func search(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func searchInteractive(g *gocui.Gui, v *gocui.View) error {
+func searchInteractive(g *gocui.Gui, v *gocui.View) (bool, error) {
 	currTopViewHandler("inputline")(g, v)
 	g.CurrentView().MoveCursor(0, 0, false)
 	in.channel <- 1
 
-	var s string
-	var err error
-	var sameline = 1
+	if len(in.content) > 0 {
 
-	x, y := v.Cursor()
+		var s string
+		var err error
+		var sameline = 1
 
-	for i := 0; err == nil; i++ {
-		s, err = v.Line(y + i)
-		if err == nil {
-			// size of line is long enough to move the cursor
-			if x < len(s)-1 {
-				indice := strings.Index(s[x+sameline:], in.content) // string will be taken into parameter after refactoring structure
+		x, y := v.Cursor()
 
-				// existing element on this line
-				if indice >= 0 {
-					if sameline == 0 {
-						x, y = v.Cursor()
-						v.MoveCursor(indice+sameline-x, i, false)
-					} else {
-						v.MoveCursor(indice+sameline, i, false)
+		for i := 0; err == nil; i++ {
+			s, err = v.Line(y + i)
+			if err == nil {
+				// size of line is long enough to move the cursor
+				if x < len(s)-1 {
+					indice := strings.Index(s[x+sameline:], in.content)
+
+					// existing element on this line
+					if indice >= 0 {
+						if sameline == 0 {
+							x, y = v.Cursor()
+							v.MoveCursor(indice+sameline-x, i, false)
+						} else {
+							v.MoveCursor(indice+sameline, i, false)
+						}
+						return true, nil
 					}
-					return nil
 				}
+				x = 0
+				sameline = 0
 			}
-			x = 0
-			sameline = 0
 		}
 	}
-	return nil
+	return false, nil
 }
 
 func save(g *gocui.Gui, v *gocui.View) error {
@@ -348,5 +351,37 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 			v.EditWrite(rune(r))
 		}
 	}
+	return nil
+}
+
+func replace(g *gocui.Gui, v *gocui.View) error {
+	go replaceInteractive(g, v)
+	return nil
+}
+
+func replaceInteractive(g *gocui.Gui, v *gocui.View) error {
+	if found, err := searchInteractive(g, v); err != nil || found == false {
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	searched := in.content
+
+	currTopViewHandler("inputline")(g, v)
+	g.CurrentView().MoveCursor(0, 0, false)
+	in.channel <- 1
+
+	for i := 0; i < len(searched); i++ {
+		v.EditDelete(false)
+	}
+
+	replaced := in.content
+
+	for _, c := range replaced {
+		v.EditWrite(c)
+	}
+
 	return nil
 }
