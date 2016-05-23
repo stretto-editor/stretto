@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -39,8 +40,15 @@ func main() {
 }
 
 func usage() {
-	fmt.Printf("stretto [file1]\n")
+	wiki := "Commands.md"
+	fmt.Printf("Usage : \n\t stretto [file1]\n\n\n")
 	flag.PrintDefaults()
+	if f, err := ioutil.ReadFile(wiki); err != nil {
+		fmt.Printf("\n Cannot load the documentation. Looking for %s\n", wiki)
+		os.Exit(0)
+	} else {
+		fmt.Printf("%s", f)
+	}
 	os.Exit(1)
 }
 
