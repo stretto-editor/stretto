@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/stretto-editor/gocui"
@@ -12,9 +12,9 @@ import (
 
 var currentFile string
 
-var fileMode = "file"
-var editMode = "edit"
-var cmdMode = "cmd"
+const fileMode = "file"
+const editMode = "edit"
+const cmdMode = "cmd"
 
 type input struct {
 	channel chan int
@@ -32,10 +32,10 @@ func initModes(g *gocui.Gui) {
 func initKeybindings(g *gocui.Gui) error {
 	in.channel = make(chan int)
 
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("cmdline")); err != nil {
@@ -66,7 +66,7 @@ func initKeybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding(editMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(fileMode)); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(editMode, "", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding(editMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
 		return err
 	}
 
@@ -74,6 +74,14 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding(fileMode, "inputline", gocui.KeyEnter, gocui.ModNone, validateInput); err != nil {
+		return err
+	}
+
+	if err := g.SetKeybinding(editMode, "main", gocui.KeyCtrlC, gocui.ModNone, copy); err != nil {
+		return err
+	}
+
+	if err := g.SetKeybinding(editMode, "main", gocui.KeyCtrlV, gocui.ModNone, paste); err != nil {
 		return err
 	}
 
@@ -212,7 +220,6 @@ func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
 	f, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "permission denied") {
-			fmt.Fprintf(os.Stdout, "erreur")
 			return nil
 		}
 		return err
@@ -243,4 +250,49 @@ func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
 
 func save(g *gocui.Gui, v *gocui.View) error {
 	return saveMain(g, v, currentFile)
+}
+
+func copy(g *gocui.Gui, v *gocui.View) error {
+	c1 := exec.Command("xsel")
+	c2 := exec.Command("xclip", "-selection", "c")
+	r, w := io.Pipe()
+	c1.Stdout = w
+	c2.Stdin = r
+	err := c1.Start()
+	if err != nil {
+		return err
+	}
+	err = c2.Start()
+	if err != nil {
+		return err
+	}
+	err = c1.Wait()
+	if err != nil {
+		return err
+	}
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+	err = c2.Wait()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func paste(g *gocui.Gui, v *gocui.View) error {
+	out, err := exec.Command("xsel", "-b").Output()
+	s := string(out)
+	if err != nil {
+		return err
+	}
+	for _, r := range s {
+		if rune(r) == '\n' {
+			v.EditNewLine()
+		} else {
+			v.EditWrite(rune(r))
+		}
+	}
+	return nil
 }
