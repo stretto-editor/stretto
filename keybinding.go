@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/stretto-editor/gocui"
@@ -253,35 +254,40 @@ func save(g *gocui.Gui, v *gocui.View) error {
 }
 
 func copy(g *gocui.Gui, v *gocui.View) error {
+	//http://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
+	if runtime.GOOS == "windows" {
+		return nil
+	}
 	c1 := exec.Command("xsel")
 	c2 := exec.Command("xclip", "-selection", "c")
 	r, w := io.Pipe()
 	c1.Stdout = w
 	c2.Stdin = r
-	err := c1.Start()
-	if err != nil {
+
+	if err := c1.Start(); err != nil {
 		return err
 	}
-	err = c2.Start()
-	if err != nil {
+
+	if err := c2.Start(); err != nil {
 		return err
 	}
-	err = c1.Wait()
-	if err != nil {
+	if err := c1.Wait(); err != nil {
 		return err
 	}
-	err = w.Close()
-	if err != nil {
+	if err := w.Close(); err != nil {
 		return err
 	}
-	err = c2.Wait()
-	if err != nil {
+
+	if err := c2.Wait(); err != nil {
 		return err
 	}
 	return nil
 }
 
 func paste(g *gocui.Gui, v *gocui.View) error {
+	if runtime.GOOS == "windows" {
+		return nil
+	}
 	out, err := exec.Command("xsel", "-b").Output()
 	s := string(out)
 	if err != nil {
