@@ -112,7 +112,11 @@ func functionnality(g *gocui.Gui, v *gocui.View) error {
 
 func validateInput(g *gocui.Gui, v *gocui.View) error {
 	str := v.Buffer()
-	in.content = str[:len(str)-2]
+	if len(str) < 2 {
+		in.content = ""
+	} else {
+		in.content = str[:len(str)-2]
+	}
 	v.Clear()
 	if err := currTopViewHandler("main")(g, v); err != nil {
 		return err
