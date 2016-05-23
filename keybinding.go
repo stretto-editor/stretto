@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/stretto-editor/gocui"
 	"io"
 	"os"
 	"strings"
-
-	"github.com/stretto-editor/gocui"
+	"unicode/utf8"
 )
 
 var currentFile string
@@ -97,8 +97,10 @@ func functionnality(g *gocui.Gui, v *gocui.View) error {
 	currTopViewHandler("inputline")(g, v)
 	g.CurrentView().MoveCursor(0, 0, false)
 	in.channel <- 1
-	for _, c := range in.content {
-		v.EditWrite(c)
+	for i, w := 0, 0; i < len(in.content)-2; i += w {
+		runeValue, width := utf8.DecodeRuneInString(in.content[i:])
+		v.EditWrite(runeValue)
+		w = width
 	}
 	return nil
 }
@@ -255,8 +257,7 @@ func searchInteractive(g *gocui.Gui, v *gocui.View) error {
 		if err == nil {
 			// size of line is long enough to move the cursor
 			if x < len(s)-1 {
-				indice := strings.Index(s[x+sameline:], in.content) // string will be taken into parameter after refactoring structure
-				fmt.Print(in.content)
+				indice := strings.Index(s[x+sameline:], in.content[:len(in.content)-2]) // string will be taken into parameter after refactoring structure
 
 				// existing element on this line
 				if indice >= 0 {
