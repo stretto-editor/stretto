@@ -40,8 +40,8 @@ func initKeybindings(g *gocui.Gui) error {
 	}{
 		{m: fileMode, v: "main", k: gocui.KeyTab, h: switchModeTo(editMode)},
 		{m: editMode, v: "main", k: gocui.KeyTab, h: switchModeTo(fileMode)},
-		{m: fileMode, v: "", k: gocui.KeyCtrlC, h: quit},
-		{m: editMode, v: "", k: gocui.KeyCtrlC, h: quit},
+		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quit},
+		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quit},
 		{m: fileMode, v: "", k: gocui.KeyHome, h: cursorHome},
 		{m: fileMode, v: "", k: gocui.KeyEnd, h: cursorEnd},
 		{m: fileMode, v: "", k: gocui.KeyPgup, h: goPgUp},
@@ -50,11 +50,12 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: gocui.KeyCtrlS, h: save},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlC, h: copy},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlV, h: paste},
+		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copy},
+		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: paste},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
 		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
 		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
 	}
 
 	for _, kb := range keyBindings {
@@ -76,9 +77,9 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 // should be called later in validateInput
 // A demonInput returns the next demonInput to be called,
 // or nil if there is noone
-type demonInput func(g *gocui.Gui, input string) demonInput
+type demonInput func(g *gocui.Gui, input string) (demonInput, error)
 
-// currentDemonInput is the next demonInput to be called
+// current is the next demonInput to be called
 // In an handler (that use the inputline), it should be set.
 // It is set back to nil once all the call have been made
 // (in validateInput handler)
@@ -86,10 +87,10 @@ var currentDemonInput demonInput
 
 func searchHandler(g *gocui.Gui, v *gocui.View) error {
 
-	currentDemonInput = func(g *gocui.Gui, input string) demonInput {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		v, _ := g.View("main")
 		search(v, input)
-		return nil
+		return nil, nil
 	}
 
 	g.SetCurrentView("inputline")
@@ -101,16 +102,16 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
-	currentDemonInput = func(g *gocui.Gui, input string) demonInput {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		v, _ := g.View("main")
 
 		if found := search(v, input); !found {
-			return nil
+			return nil, nil
 		}
 
 		searched := input
 
-		return func(g *gocui.Gui, input string) demonInput {
+		return func(g *gocui.Gui, input string) (demonInput, error) {
 			v, _ := g.View("main")
 
 			for i := 0; i < len(searched); i++ {
@@ -120,8 +121,8 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 			for _, c := range input[1:] {
 				v.EditWrite(c)
 			}
-			return nil
-		}
+			return nil, nil
+		}, nil
 
 	}
 
@@ -169,12 +170,12 @@ func search(v *gocui.View, pattern string) bool {
 
 func exampleInputFunc(g *gocui.Gui, v *gocui.View) error {
 
-	currentDemonInput = func(g *gocui.Gui, input string) demonInput {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		vmain, _ := g.View("main")
 		for _, ch := range input {
 			vmain.EditWrite(ch)
 		}
-		return nil
+		return nil, nil
 	}
 
 	g.SetCurrentView("inputline")
@@ -200,8 +201,8 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 	} else {
 		input = input[:le-2]
 	}
-
-	currentDemonInput = currentDemonInput(g, input)
+	var err error
+	currentDemonInput, err = currentDemonInput(g, input)
 
 	// if currentDemonInput is not nil,
 	// the inputline is still open and
@@ -212,7 +213,7 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 		g.SetViewOnTop("main")
 	}
 
-	return nil
+	return err
 }
 
 func switchModeTo(name string) gocui.KeybindingHandler {
@@ -379,8 +380,27 @@ func searchInteractive(g *gocui.Gui, v *gocui.View) (bool, error) {
 }
 */
 
-func save(g *gocui.Gui, v *gocui.View) error {
-	return saveMain(g, v, currentFile)
+func save(g *gocui.Gui, view *gocui.View) error {
+	if currentFile == "" {
+		currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
+			v, _ := g.View("main")
+			if _, err := os.Stat(filename); os.IsNotExist(err) {
+				var file *os.File
+				file, _ = os.Create(filename)
+				file.Close()
+			}
+			err := saveMain(g, v, filename)
+			if _, e := os.Stat(filename); os.IsNotExist(e) {
+				currentFile = filename
+			}
+			return nil, err
+		}
+		g.SetCurrentView("inputline")
+		g.SetViewOnTop("inputline")
+		g.CurrentView().MoveCursor(0, 0, false)
+		return nil
+	}
+	return saveMain(g, view, currentFile)
 }
 
 func copy(g *gocui.Gui, v *gocui.View) error {
@@ -468,5 +488,22 @@ func replaceInteractive(g *gocui.Gui, v *gocui.View) error {
 
 	return nil
 }
-
 */
+func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
+
+	currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
+		v, _ := g.View("main")
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			var file *os.File
+			file, _ = os.Create(filename)
+			file.Close()
+		}
+		return nil, saveMain(g, v, filename)
+	}
+
+	g.SetCurrentView("inputline")
+	g.SetViewOnTop("inputline")
+	g.CurrentView().MoveCursor(0, 0, false)
+
+	return nil
+}
