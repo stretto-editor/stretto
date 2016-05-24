@@ -327,17 +327,26 @@ func currTopViewHandler(name string) gocui.KeybindingHandler {
 
 func cursorHome(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		cx, _ := v.Cursor()
-		v.MoveCursor(-cx, 0, true)
+		_, cy := v.Cursor()
+		_, oy := v.Origin()
+		v.SetOrigin(0, oy)
+		v.SetCursor(0, cy)
 	}
 	return nil
 }
 
 func cursorEnd(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		cx, cy := v.Cursor()
+		_, cy := v.Cursor()
+		_, oy := v.Origin()
+		x, _ := v.Size()
 		l, _ := v.Line(cy)
-		v.MoveCursor(len(l)-cx, 0, true)
+		if len(l) > x {
+			v.SetOrigin(len(l)-x+1, oy)
+			v.SetCursor(x-1, cy)
+		} else {
+			v.SetCursor(len(l), cy)
+		}
 	}
 	return nil
 }
