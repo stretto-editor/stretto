@@ -40,14 +40,14 @@ func initKeybindings(g *gocui.Gui) error {
 	}{
 		{m: fileMode, v: "main", k: gocui.KeyTab, h: switchModeTo(editMode)},
 		{m: editMode, v: "main", k: gocui.KeyTab, h: switchModeTo(fileMode)},
-		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quit},
-		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quit},
+		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 		{m: fileMode, v: "", k: gocui.KeyHome, h: cursorHome},
 		{m: fileMode, v: "", k: gocui.KeyEnd, h: cursorEnd},
 		{m: fileMode, v: "", k: gocui.KeyPgup, h: goPgUp},
 		{m: fileMode, v: "", k: gocui.KeyPgdn, h: goPgDown},
 		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlS, h: save},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlS, h: saveHandler},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
 		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copy},
@@ -56,6 +56,7 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
 		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
+		{m: fileMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
 	}
 
 	for _, kb := range keyBindings {
@@ -66,6 +67,11 @@ func initKeybindings(g *gocui.Gui) error {
 
 	g.SetCurrentMode(fileMode)
 
+	return nil
+}
+
+func breaklineHandler(g *gocui.Gui, v *gocui.View) error {
+	v.EditNewLine()
 	return nil
 }
 
@@ -100,6 +106,80 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+func saveHandler(g *gocui.Gui, v *gocui.View) error {
+
+	if currentFile == "" {
+
+		currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+
+			createFile(input)
+
+			v, _ := g.View("main")
+			if err := saveMain(v, input); err != nil {
+				return nil, err
+			}
+
+			return nil, nil
+		}
+
+		g.SetCurrentView("inputline")
+		g.SetViewOnTop("inputline")
+		g.CurrentView().MoveCursor(0, 0, false)
+
+		return nil
+	}
+
+	vmain, _ := g.View("main")
+	if err := saveMain(vmain, currentFile); err != nil {
+		return err
+	}
+	return nil
+}
+
+// create the file in the directory of the
+func createFile(filename string) {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		var file *os.File
+		file, _ = os.Create(filename)
+		file.Close()
+		currentFile = filename
+	}
+}
+
+func quitHandler(g *gocui.Gui, v *gocui.View) error {
+
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+		if input != "n" {
+			if currentFile == "" {
+				return func(g *gocui.Gui, input string) (demonInput, error) {
+
+					createFile(input)
+
+					v, _ := g.View("main")
+					if err := saveMain(v, input); err != nil {
+						return nil, err
+					}
+
+					return nil, gocui.ErrQuit
+				}, nil
+
+			}
+
+			v, _ := g.View("main")
+			if err := saveMain(v, input); err != nil {
+				return nil, err
+			}
+		}
+		return nil, gocui.ErrQuit
+	}
+
+	g.SetCurrentView("inputline")
+	g.SetViewOnTop("inputline")
+	g.CurrentView().MoveCursor(0, 0, false)
+
+	return nil
+}
+
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
@@ -118,7 +198,7 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 				v.EditDelete(false)
 			}
 
-			for _, c := range input[1:] {
+			for _, c := range input {
 				v.EditWrite(c)
 			}
 			return nil, nil
@@ -194,12 +274,13 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	input := v.Buffer()
+	v.SetCursor(0, 0)
 	v.Clear()
 
-	if le := len(input); le < 2 {
+	if le := len(input); le < 1 {
 		input = ""
 	} else {
-		input = input[:le-2]
+		input = input[:le-1]
 	}
 	var err error
 	currentDemonInput, err = currentDemonInput(g, input)
@@ -304,7 +385,7 @@ func goPgDown(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
+func saveMain(v *gocui.View, filename string) error {
 	if filename == "" {
 		return nil
 	}
@@ -379,29 +460,6 @@ func searchInteractive(g *gocui.Gui, v *gocui.View) (bool, error) {
 	return false, nil
 }
 */
-
-func save(g *gocui.Gui, view *gocui.View) error {
-	if currentFile == "" {
-		currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
-			v, _ := g.View("main")
-			if _, err := os.Stat(filename); os.IsNotExist(err) {
-				var file *os.File
-				file, _ = os.Create(filename)
-				file.Close()
-			}
-			err := saveMain(g, v, filename)
-			if _, e := os.Stat(filename); os.IsNotExist(e) {
-				currentFile = filename
-			}
-			return nil, err
-		}
-		g.SetCurrentView("inputline")
-		g.SetViewOnTop("inputline")
-		g.CurrentView().MoveCursor(0, 0, false)
-		return nil
-	}
-	return saveMain(g, view, currentFile)
-}
 
 func copy(g *gocui.Gui, v *gocui.View) error {
 	//http://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
@@ -498,7 +556,7 @@ func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
 			file, _ = os.Create(filename)
 			file.Close()
 		}
-		return nil, saveMain(g, v, filename)
+		return nil, saveMain(v, filename)
 	}
 
 	g.SetCurrentView("inputline")
