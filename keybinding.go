@@ -277,17 +277,18 @@ func save(g *gocui.Gui, v *gocui.View) error {
 
 func copy(g *gocui.Gui, v *gocui.View) error {
 	//http://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		return nil
 	}
-	c1 := exec.Command("xsel")
-	c2 := exec.Command("xclip", "-selection", "c")
+	c1 := exec.Command("xclip", "-o")
+	c2 := exec.Command("xclip", "-i", "-selection", "c")
 	r, w := io.Pipe()
 	c1.Stdout = w
 	c2.Stdin = r
 
 	if err := c1.Start(); err != nil {
-		return err
+		// print : error can't find xclip
+		return nil
 	}
 
 	if err := c2.Start(); err != nil {
@@ -310,10 +311,11 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 	if runtime.GOOS == "windows" {
 		return nil
 	}
-	out, err := exec.Command("xsel", "-b").Output()
+	out, err := exec.Command("xclip", "-o", "-selection", "c").Output()
 	s := string(out)
 	if err != nil {
-		return err
+		//print error : can't find xclip
+		return nil
 	}
 	for _, r := range s {
 		if rune(r) == '\n' {
