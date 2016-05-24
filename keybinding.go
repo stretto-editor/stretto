@@ -35,28 +35,54 @@ func initKeybindings(g *gocui.Gui) error {
 	var keyBindings = []struct {
 		m string
 		v string
-		k gocui.Key
+		k interface{}
 		h gocui.KeybindingHandler
 	}{
-		{m: fileMode, v: "main", k: gocui.KeyTab, h: switchModeTo(editMode)},
-		{m: editMode, v: "main", k: gocui.KeyTab, h: switchModeTo(fileMode)},
-		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
-		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+
+		// NAVIGATION
+
 		{m: fileMode, v: "", k: gocui.KeyHome, h: cursorHome},
 		{m: fileMode, v: "", k: gocui.KeyEnd, h: cursorEnd},
 		{m: fileMode, v: "", k: gocui.KeyPgup, h: goPgUp},
 		{m: fileMode, v: "", k: gocui.KeyPgdn, h: goPgDown},
+
+		{m: editMode, v: "", k: gocui.KeyHome, h: cursorHome},
+		{m: editMode, v: "", k: gocui.KeyEnd, h: cursorEnd},
+		{m: editMode, v: "", k: gocui.KeyPgup, h: goPgUp},
+		{m: editMode, v: "", k: gocui.KeyPgdn, h: goPgDown},
+
+		// USEFUL
+
+		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+		{m: fileMode, v: "main", k: gocui.KeyTab, h: switchModeTo(editMode)},
 		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlS, h: saveHandler},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
+		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
+
+		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+		{m: editMode, v: "main", k: gocui.KeyTab, h: switchModeTo(fileMode)},
+		{m: editMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
+		{m: editMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
+
+		// EDITION
+
+		{m: fileMode, v: "main", k: 's', h: saveHandler},
+		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
+		{m: fileMode, v: "main", k: 'f', h: searchHandler},
+		{m: fileMode, v: "main", k: 'p', h: searchAndReplaceHandler},
+		{m: fileMode, v: "main", k: 'a', h: exampleInputFunc},
+
+		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
+
+		{m: editMode, v: "main", k: gocui.KeyCtrlS, h: saveHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
 		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copy},
 		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: paste},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
-		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
-		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
-		{m: fileMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
+
+		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
+		{m: editMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 	}
 
 	for _, kb := range keyBindings {
@@ -65,7 +91,7 @@ func initKeybindings(g *gocui.Gui) error {
 		}
 	}
 
-	g.SetCurrentMode(fileMode)
+	g.SetCurrentMode(editMode)
 
 	return nil
 }
@@ -226,7 +252,7 @@ func search(v *gocui.View, pattern string) bool {
 			s, err = v.Line(y + i)
 			if err == nil {
 				// size of line is long enough to move the cursor
-				if x < len(s)-1 {
+				if x < len(s) {
 					indice := strings.Index(s[x+sameline:], pattern)
 
 					// existing element on this line
@@ -308,6 +334,12 @@ func switchModeTo(name string) gocui.KeybindingHandler {
 		}
 		if name == "cmd" {
 			g.SetCurrentView("cmdline")
+		}
+
+		v.Editable = true
+
+		if name == "file" {
+			v.Editable = false
 		}
 		return nil
 	}

@@ -14,15 +14,15 @@ The stretto editor contains three modes :
 
 Available in Edition and File modes.
 
-Keypress         | Actions
----------------- | -----------------
-up, down, left, right | Move the cursor to the corresponding direction
-end, home             | Move the cursor to the end or the beginning of the line
-PageUp, PageDown      | Move the previous or the next PageUp
+Keypress              | Actions
+----------------------| ----------------------
+Up, Down, Left, Right | Moves the cursor to the corresponding direction
+End, Home             | Moves the cursor to the end or the beginning of the line
+PageUp, PageDown      | Moves to the previous or the next PageUp
 
 The scroll is also available.
 
-## Usefull
+## Useful
 
 Edition     | File          | Actions
 ----------- | ------------- | -----------
@@ -36,10 +36,11 @@ Ctrl+T      | Ctrl+T        | Open/close command line
 Edition     | File          | Actions
 ----------- | ------------- | -----------
 Ctrl+S      | S             | Save
+Ctrl+U      | U             | Save As
 Ctrl+F      | F             | Search forward for next occurence
-Ctrl+F      | P             | Search and replace next occurence
+Ctrl+P      | P             | Search and replace next occurence
 Ctrl+C      |               | Copy
-Ctrl+P      |               | Paste
+Ctrl+V      |               | Paste
 
 
 Stay tuned for future releases ...
