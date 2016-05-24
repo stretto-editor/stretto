@@ -52,7 +52,7 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlC, h: copy},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlV, h: paste},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlP, h: replace},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
 		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
 		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 	}
@@ -74,18 +74,55 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 // demonInput defines the prototype for functions that
 // should be called later in validateInput
-type demonInput func(g *gocui.Gui, input string)
+// A demonInput returns the next demonInput to be called,
+// or nil if there is noone
+type demonInput func(g *gocui.Gui, input string) demonInput
 
-// currentDemonInput is the next currentDemonInput that will be called.
-// It should be set in an handler that use the inputline !
-// It is set back to nil once the call has been made (in validateInput handler)
+// currentDemonInput is the next demonInput to be called
+// In an handler (that use the inputline), it should be set.
+// It is set back to nil once all the call have been made
+// (in validateInput handler)
 var currentDemonInput demonInput
 
 func searchHandler(g *gocui.Gui, v *gocui.View) error {
 
-	currentDemonInput = func(g *gocui.Gui, input string) {
+	currentDemonInput = func(g *gocui.Gui, input string) demonInput {
 		v, _ := g.View("main")
 		search(v, input)
+		return nil
+	}
+
+	g.SetCurrentView("inputline")
+	g.SetViewOnTop("inputline")
+	g.CurrentView().MoveCursor(0, 0, false)
+
+	return nil
+}
+
+func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
+
+	currentDemonInput = func(g *gocui.Gui, input string) demonInput {
+		v, _ := g.View("main")
+
+		if found := search(v, input); !found {
+			return nil
+		}
+
+		searched := input
+
+		return func(g *gocui.Gui, input string) demonInput {
+			v, _ := g.View("main")
+
+			for i := 0; i < len(searched); i++ {
+				v.EditDelete(false)
+			}
+
+			for _, c := range input[1:] {
+				v.EditWrite(c)
+			}
+			return nil
+		}
+
 	}
 
 	g.SetCurrentView("inputline")
@@ -132,11 +169,12 @@ func search(v *gocui.View, pattern string) bool {
 
 func exampleInputFunc(g *gocui.Gui, v *gocui.View) error {
 
-	currentDemonInput = func(g *gocui.Gui, input string) {
+	currentDemonInput = func(g *gocui.Gui, input string) demonInput {
 		vmain, _ := g.View("main")
 		for _, ch := range input {
 			vmain.EditWrite(ch)
 		}
+		return nil
 	}
 
 	g.SetCurrentView("inputline")
@@ -155,19 +193,24 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	input := v.Buffer()
-
-	if le := len(input); le < 2 {
-		currentDemonInput(g, "")
-	} else {
-		currentDemonInput(g, input[:le-2])
-	}
-
 	v.Clear()
 
-	currentDemonInput = nil
+	if le := len(input); le < 2 {
+		input = ""
+	} else {
+		input = input[:le-2]
+	}
 
-	g.SetCurrentView("main")
-	g.SetViewOnTop("main")
+	currentDemonInput = currentDemonInput(g, input)
+
+	// if currentDemonInput is not nil,
+	// the inputline is still open and
+	// we are expecting some input
+	// (see SearchAndReplace for instance)
+	if currentDemonInput == nil {
+		g.SetCurrentView("main")
+		g.SetViewOnTop("main")
+	}
 
 	return nil
 }
@@ -295,6 +338,7 @@ func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
 	return nil
 }
 
+/*
 func searchInteractive(g *gocui.Gui, v *gocui.View) (bool, error) {
 	currTopViewHandler("inputline")(g, v)
 	g.CurrentView().MoveCursor(0, 0, false)
@@ -333,6 +377,7 @@ func searchInteractive(g *gocui.Gui, v *gocui.View) (bool, error) {
 	}
 	return false, nil
 }
+*/
 
 func save(g *gocui.Gui, v *gocui.View) error {
 	return saveMain(g, v, currentFile)
@@ -390,6 +435,8 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+/*
+
 func replace(g *gocui.Gui, v *gocui.View) error {
 	go replaceInteractive(g, v)
 	return nil
@@ -421,3 +468,5 @@ func replaceInteractive(g *gocui.Gui, v *gocui.View) error {
 
 	return nil
 }
+
+*/
