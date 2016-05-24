@@ -31,7 +31,6 @@ func initModes(g *gocui.Gui) {
 }
 
 func initKeybindings(g *gocui.Gui) error {
-	in.channel = make(chan int)
 
 	var keyBindings = []struct {
 		m string
@@ -49,8 +48,8 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "", k: gocui.KeyPgdn, h: goPgDown},
 		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlS, h: save},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlF, h: search},
-		{m: fileMode, v: "main", k: gocui.KeyCtrlA, h: getInput},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlC, h: copy},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlV, h: paste},
 		{m: fileMode, v: "main", k: gocui.KeyCtrlP, h: replace},
@@ -73,34 +72,103 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
-func getInput(g *gocui.Gui, v *gocui.View) error {
-	go functionnality(g, v)
+// demonInput defines the prototype for functions that
+// should be called later in validateInput
+type demonInput func(g *gocui.Gui, input string)
+
+// currentDemonInput is the next currentDemonInput that will be called.
+// It should be set in an handler that use the inputline !
+// It is set back to nil once the call has been made (in validateInput handler)
+var currentDemonInput demonInput
+
+func searchHandler(g *gocui.Gui, v *gocui.View) error {
+
+	currentDemonInput = func(g *gocui.Gui, input string) {
+		v, _ := g.View("main")
+		search(v, input)
+	}
+
+	g.SetCurrentView("inputline")
+	g.SetViewOnTop("inputline")
+	g.CurrentView().MoveCursor(0, 0, false)
+
 	return nil
 }
 
-func functionnality(g *gocui.Gui, v *gocui.View) error {
-	currTopViewHandler("inputline")(g, v)
-	g.CurrentView().MoveCursor(0, 0, false)
-	in.channel <- 1
-	for _, c := range in.content {
-		v.EditWrite(c)
+func search(v *gocui.View, pattern string) bool {
+	if len(pattern) > 0 {
+
+		var s string
+		var err error
+		var sameline = 1
+
+		x, y := v.Cursor()
+
+		for i := 0; err == nil; i++ {
+			s, err = v.Line(y + i)
+			if err == nil {
+				// size of line is long enough to move the cursor
+				if x < len(s)-1 {
+					indice := strings.Index(s[x+sameline:], pattern)
+
+					// existing element on this line
+					if indice >= 0 {
+						if sameline == 0 {
+							x, y = v.Cursor()
+							v.MoveCursor(indice+sameline-x, i, false)
+						} else {
+							v.MoveCursor(indice+sameline, i, false)
+						}
+						return true
+					}
+				}
+				x = 0
+				sameline = 0
+			}
+		}
 	}
+	return false
+}
+
+func exampleInputFunc(g *gocui.Gui, v *gocui.View) error {
+
+	currentDemonInput = func(g *gocui.Gui, input string) {
+		vmain, _ := g.View("main")
+		for _, ch := range input {
+			vmain.EditWrite(ch)
+		}
+	}
+
+	g.SetCurrentView("inputline")
+	g.SetViewOnTop("inputline")
+	g.CurrentView().MoveCursor(0, 0, false)
 	return nil
 }
 
 func validateInput(g *gocui.Gui, v *gocui.View) error {
-	str := v.Buffer()
-	if len(str) < 2 {
-		in.content = ""
+
+	if v.Name() != "inputline" {
+		panic("Inputline is not the current view")
+	}
+	if currentDemonInput == nil {
+		panic("No Current Demon Input Available")
+	}
+
+	input := v.Buffer()
+
+	if le := len(input); le < 2 {
+		currentDemonInput(g, "")
 	} else {
-		in.content = str[:len(str)-2]
+		currentDemonInput(g, input[:le-2])
 	}
+
 	v.Clear()
-	if err := currTopViewHandler("main")(g, v); err != nil {
-		return err
-	}
-	g.CurrentView().MoveCursor(0, 0, false) // Bad way to update
-	<-in.channel
+
+	currentDemonInput = nil
+
+	g.SetCurrentView("main")
+	g.SetViewOnTop("main")
+
 	return nil
 }
 
@@ -224,11 +292,6 @@ func saveMain(g *gocui.Gui, v *gocui.View, filename string) error {
 			return err
 		}
 	}
-	return nil
-}
-
-func search(g *gocui.Gui, v *gocui.View) error {
-	go searchInteractive(g, v)
 	return nil
 }
 
