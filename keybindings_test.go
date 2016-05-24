@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/stretto-editor/gocui"
-	"strings"
 	"testing"
 )
 
@@ -21,6 +20,7 @@ func TestCursor(t *testing.T) {
 	maxX, maxY := g.Size()
 
 	v, _ := g.SetView("testA", 0, 0, maxX, maxY)
+	g.SetCurrentView("testA")
 	fmt.Fprint(v, "foo")
 	cursorEnd(g, v)
 	if x, y := v.Cursor(); x != 3 || y != 0 {
@@ -80,20 +80,20 @@ func TestPageDownUp(t *testing.T) {
 	maxX, maxY := g.Size()
 	v, _ := g.SetView("test", 0, 0, maxX, maxY)
 	g.SetCurrentView("test")
-	for i := 0; i < 1000; i++ {
-		fmt.Fprintf(v, "%d\n", i)
+	for i := 0; i < 100; i++ {
+		v.Write([]byte("bar\n"))
 	}
 
 	goPgDown(g, v)
 	goPgDown(g, v)
 
-	if fl := strings.Split(v.ViewBuffer(), "\n"); fl[0] != string(2*maxY-1) {
-		t.Errorf("Found line no %s instead of line no %d", fl[0], 2*maxY-1)
+	if _, y := v.Origin(); y != 2*maxY {
+		t.Errorf("Found line no %d instead of line no %d", y, 2*maxY)
 	}
 
 	goPgUp(g, v)
-	if fl := strings.Split(v.ViewBuffer(), "\n"); fl[0] != string(maxY-1) {
-		t.Errorf("Found line no %s instead of line no %d", fl[0], 2*maxY-1)
+	if _, y := v.Origin(); y != maxY {
+		t.Errorf("Found line no %d instead of line no %d", y, maxY)
 	}
 }
 
