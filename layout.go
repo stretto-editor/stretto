@@ -71,6 +71,7 @@ func openFile(v *gocui.View, name string) error {
 		return err
 	}
 
+	v.Clear()
 	fmt.Fprintf(v, "%s", f)
 	return nil
 }

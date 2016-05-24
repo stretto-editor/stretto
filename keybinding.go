@@ -57,11 +57,13 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: gocui.KeyTab, h: switchModeTo(editMode)},
 		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
 		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
+		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
 
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 		{m: editMode, v: "main", k: gocui.KeyTab, h: switchModeTo(fileMode)},
 		{m: editMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
 		{m: editMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
+		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
 
 		// EDITION
 
@@ -551,6 +553,22 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 			v.EditWrite(rune(r))
 		}
 	}
+	return nil
+}
+
+func openFileHandler(g *gocui.Gui, v *gocui.View) error {
+
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+		v, _ := g.View("main")
+		openFile(v, input)
+		currentFile = input
+		return nil, nil
+	}
+
+	g.SetCurrentView("inputline")
+	g.SetViewOnTop("inputline")
+	g.CurrentView().MoveCursor(0, 0, false)
+
 	return nil
 }
 
