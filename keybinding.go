@@ -33,59 +33,35 @@ func initModes(g *gocui.Gui) {
 func initKeybindings(g *gocui.Gui) error {
 	in.channel = make(chan int)
 
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(editMode)); err != nil {
-		return err
+	var keyBindings = []struct {
+		m string
+		v string
+		k gocui.Key
+		h gocui.KeybindingHandler
+	}{
+		{m: fileMode, v: "main", k: gocui.KeyTab, h: switchModeTo(editMode)},
+		{m: editMode, v: "main", k: gocui.KeyTab, h: switchModeTo(fileMode)},
+		{m: fileMode, v: "", k: gocui.KeyCtrlC, h: quit},
+		{m: editMode, v: "", k: gocui.KeyCtrlC, h: quit},
+		{m: fileMode, v: "", k: gocui.KeyHome, h: cursorHome},
+		{m: fileMode, v: "", k: gocui.KeyEnd, h: cursorEnd},
+		{m: fileMode, v: "", k: gocui.KeyPgup, h: goPgUp},
+		{m: fileMode, v: "", k: gocui.KeyPgdn, h: goPgDown},
+		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlS, h: save},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlF, h: search},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlA, h: getInput},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlC, h: copy},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlV, h: paste},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlP, h: replace},
+		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
+		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 	}
-	if err := g.SetKeybinding(editMode, "main", gocui.KeyTab, gocui.ModNone, switchModeTo(fileMode)); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(editMode, "", gocui.KeyCtrlQ, gocui.ModNone, quit); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyHome, gocui.ModNone, cursorHome); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyEnd, gocui.ModNone, cursorEnd); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyPgup, gocui.ModNone, goPgUp); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyPgdn, gocui.ModNone, goPgDown); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("cmdline")); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlS, gocui.ModNone, save); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlF, gocui.ModNone, search); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlA, gocui.ModNone, getInput); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(editMode, "main", gocui.KeyCtrlC, gocui.ModNone, copy); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(editMode, "main", gocui.KeyCtrlV, gocui.ModNone, paste); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "main", gocui.KeyCtrlP, gocui.ModNone, replace); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "cmdline", gocui.KeyCtrlT, gocui.ModNone, currTopViewHandler("main")); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding(fileMode, "inputline", gocui.KeyEnter, gocui.ModNone, validateInput); err != nil {
-		return err
+
+	for _, kb := range keyBindings {
+		if err := g.SetKeybinding(kb.m, kb.v, kb.k, gocui.ModNone, kb.h); err != nil {
+			return err
+		}
 	}
 
 	g.SetCurrentMode(fileMode)
@@ -142,11 +118,6 @@ func switchModeTo(name string) gocui.KeybindingHandler {
 		}
 		return nil
 	}
-}
-
-func readCmd(g *gocui.Gui, v *gocui.View) error {
-
-	return nil
 }
 
 func currTopViewHandler(name string) gocui.KeybindingHandler {
