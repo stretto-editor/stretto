@@ -73,5 +73,9 @@ func openFile(v *gocui.View, name string) error {
 
 	v.Clear()
 	fmt.Fprintf(v, "%s", f)
+	x, y := v.Cursor()
+	v.SetOrigin(0, 0)
+	v.SetCursor(0, 0)
+	print(x, y)
 	return nil
 }

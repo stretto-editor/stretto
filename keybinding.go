@@ -123,7 +123,15 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		v, _ := g.View("main")
-		search(v, input)
+		x, y := v.Cursor()
+		//search(v, input)
+
+		if found, newx, newy := realSearch(v, input, x, y); found == true {
+			//fmt.Print(found, newx, newy)
+			move(v, newx, newy)
+			return nil, nil
+		}
+
 		return nil, nil
 	}
 
@@ -238,6 +246,57 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 	g.SetViewOnTop("inputline")
 	g.CurrentView().MoveCursor(0, 0, false)
 
+	return nil
+}
+
+// func gives how to move from the current origin
+func realSearch(v *gocui.View, pattern string, x int, y int) (bool, int, int) {
+
+	if len(pattern) > 0 {
+
+		var s string
+		var err error
+		var sameline = 1
+
+		for i := 0; err == nil; i++ {
+			s, err = v.Line(y + i)
+			if err == nil {
+
+				if x < len(s) {
+					indice := strings.Index(s[x+sameline:], pattern)
+
+					if indice >= 0 {
+						if sameline == 0 {
+							return true, indice + sameline, y + i
+						}
+						return true, indice + sameline + x, y + i
+					}
+				}
+				x, sameline = 0, 0
+			}
+		}
+	}
+	return false, 0, 0
+}
+
+func move(v *gocui.View, x int, y int) error {
+	_, yOrigin := v.Origin()
+	_, ySize := v.Size()
+
+	if y <= ySize {
+
+		v.SetCursor(x, y)
+		return nil
+	}
+
+	// how many times we move from the size of the window
+	var i int
+	for i = 0; y > ySize; i++ {
+		y -= ySize
+
+	}
+	v.SetOrigin(0, yOrigin+i*ySize)
+	v.SetCursor(x, y)
 	return nil
 }
 
@@ -560,8 +619,10 @@ func openFileHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		v, _ := g.View("main")
-		openFile(v, input)
-		currentFile = input
+		err := openFile(v, input)
+		if err == nil {
+			currentFile = input
+		}
 		return nil, nil
 	}
 
