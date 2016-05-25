@@ -194,7 +194,7 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 			}
 
 			v, _ := g.View("main")
-			if err := saveMain(v, input); err != nil {
+			if err := saveMain(v, currentFile); err != nil {
 				return nil, err
 			}
 		}
