@@ -26,13 +26,11 @@ var in input
 
 func initModes(g *gocui.Gui) {
 	openCmdMode := func(g *gocui.Gui) error {
-		g.SetCurrentView("cmdline")
-		g.SetViewOnTop("cmdline")
-		var v *gocui.View
-		var err error
-		if v, err = g.View("cmdline"); err != nil {
+		if err := g.SetCurrentView("cmdline"); err != nil {
 			return err
 		}
+		g.SetViewOnTop("cmdline")
+		v, _ := g.View("cmdline")
 		v.Clear()
 		v.SetOrigin(0, 0)
 		v.SetCursor(0, 0)
@@ -46,20 +44,20 @@ func initModes(g *gocui.Gui) {
 	openFileMode := func(g *gocui.Gui) error {
 		var v *gocui.View
 		var err error
-		if v, err = g.View("main"); err == nil {
-			v.Editable = false
-			return nil
+		if v, err = g.View("main"); err != nil {
+			return err
 		}
-		return err
+		v.Editable = false
+		return nil
 	}
 	closeFileMode := func(g *gocui.Gui) error {
 		var v *gocui.View
 		var err error
-		if v, err = g.View("main"); err == nil {
-			v.Editable = true
-			return nil
+		if v, err = g.View("main"); err != nil {
+			return err
 		}
-		return err
+		v.Editable = true
+		return nil
 	}
 	openEditMode := func(g *gocui.Gui) error {
 		return nil
