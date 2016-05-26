@@ -122,16 +122,7 @@ var currentDemonInput demonInput
 func searchHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		v, _ := g.View("main")
-		x, y := v.Cursor()
-		//search(v, input)
-
-		if found, newx, newy := realSearch(v, input, x, y); found == true {
-			//fmt.Print(found, newx, newy)
-			move(v, newx, newy)
-			return nil, nil
-		}
-
+		search(g, input)
 		return nil, nil
 	}
 
@@ -139,6 +130,16 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 	g.SetViewOnTop("inputline")
 	g.CurrentView().MoveCursor(0, 0, false)
 
+	return nil
+}
+
+func search(g *gocui.Gui, input string) error {
+	v, _ := g.View("main")
+	x, y := v.Cursor()
+
+	if found, newx, newy := searchForward(v, input, x, y); found == true {
+		moveTo(v, newx, newy)
+	}
 	return nil
 }
 
@@ -220,10 +221,15 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		v, _ := g.View("main")
+		x, y := v.Cursor()
+		var xnew, ynew int
+		var found bool
 
-		if found := search(v, input); !found {
+		if found, xnew, ynew = searchForward(v, input, x, y); !found {
 			return nil, nil
 		}
+
+		moveTo(v, xnew, ynew)
 
 		searched := input
 
@@ -250,7 +256,7 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 // func gives how to move from the current origin
-func realSearch(v *gocui.View, pattern string, x int, y int) (bool, int, int) {
+func searchForward(v *gocui.View, pattern string, x int, y int) (bool, int, int) {
 
 	if len(pattern) > 0 {
 
@@ -279,7 +285,8 @@ func realSearch(v *gocui.View, pattern string, x int, y int) (bool, int, int) {
 	return false, 0, 0
 }
 
-func move(v *gocui.View, x int, y int) error {
+// Moves the cursor relatively to the origin of the view
+func moveTo(v *gocui.View, x int, y int) error {
 	_, yOrigin := v.Origin()
 	_, ySize := v.Size()
 
@@ -298,41 +305,6 @@ func move(v *gocui.View, x int, y int) error {
 	v.SetOrigin(0, yOrigin+i*ySize)
 	v.SetCursor(x, y)
 	return nil
-}
-
-func search(v *gocui.View, pattern string) bool {
-	if len(pattern) > 0 {
-
-		var s string
-		var err error
-		var sameline = 1
-
-		x, y := v.Cursor()
-
-		for i := 0; err == nil; i++ {
-			s, err = v.Line(y + i)
-			if err == nil {
-				// size of line is long enough to move the cursor
-				if x < len(s) {
-					indice := strings.Index(s[x+sameline:], pattern)
-
-					// existing element on this line
-					if indice >= 0 {
-						if sameline == 0 {
-							x, y = v.Cursor()
-							v.MoveCursor(indice+sameline-x, i, false)
-						} else {
-							v.MoveCursor(indice+sameline, i, false)
-						}
-						return true
-					}
-				}
-				x = 0
-				sameline = 0
-			}
-		}
-	}
-	return false
 }
 
 func exampleInputFunc(g *gocui.Gui, v *gocui.View) error {
@@ -521,47 +493,6 @@ func saveMain(v *gocui.View, filename string) error {
 	}
 	return nil
 }
-
-/*
-func searchInteractive(g *gocui.Gui, v *gocui.View) (bool, error) {
-	currTopViewHandler("inputline")(g, v)
-	g.CurrentView().MoveCursor(0, 0, false)
-	in.channel <- 1
-
-	if len(in.content) > 0 {
-
-		var s string
-		var err error
-		var sameline = 1
-
-		x, y := v.Cursor()
-
-		for i := 0; err == nil; i++ {
-			s, err = v.Line(y + i)
-			if err == nil {
-				// size of line is long enough to move the cursor
-				if x < len(s)-1 {
-					indice := strings.Index(s[x+sameline:], in.content)
-
-					// existing element on this line
-					if indice >= 0 {
-						if sameline == 0 {
-							x, y = v.Cursor()
-							v.MoveCursor(indice+sameline-x, i, false)
-						} else {
-							v.MoveCursor(indice+sameline, i, false)
-						}
-						return true, nil
-					}
-				}
-				x = 0
-				sameline = 0
-			}
-		}
-	}
-	return false, nil
-}
-*/
 
 func copy(g *gocui.Gui, v *gocui.View) error {
 	//http://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
