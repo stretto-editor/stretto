@@ -12,7 +12,7 @@ func layout(g *gocui.Gui) error {
 
 	maxX, maxY := g.Size()
 
-	if v, err := g.SetView("main", 0, 0, maxX-1, maxY-1); err != nil {
+	if v, err := g.SetView("main", 0, 0, maxX-1, maxY-5); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -35,7 +35,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	wcmd, hcmd := 30, 2
-	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY - hcmd - 5
+	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY - hcmd - 10
 	if v, err := g.SetView("cmdline", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -54,6 +54,18 @@ func layout(g *gocui.Gui) error {
 		v.Editable = true
 		v.Title = "Inputline for interactive actions"
 		g.SetViewOnTop("main")
+	}
+
+	winfo, hinfo := maxX-1, 4
+	var xinfo, yinfo int = (maxX - winfo) / 2, maxY - hinfo - 1
+	if v, err := g.SetView("infoline", xinfo, yinfo, xinfo+winfo, yinfo+hinfo); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Editable = true
+		v.Footer = "INFO"
+		info, _ := g.View("infoline")
+		fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0,0")
 	}
 
 	return nil

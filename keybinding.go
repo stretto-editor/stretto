@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/stretto-editor/gocui"
@@ -113,6 +115,7 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
 		{m: fileMode, v: "main", k: 'p', h: searchAndReplaceHandler},
 		{m: fileMode, v: "main", k: 'a', h: exampleInputFunc},
+		{m: fileMode, v: "main", k: 'z', h: commandInfoHandler},
 
 		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 
@@ -123,6 +126,10 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: editMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
 		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copy},
 		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: paste},
+
+		{m: editMode, v: "main", k: gocui.KeyCtrlZ, h: commandInfoHandler},
+		{m: editMode, v: "cmdinfo", k: gocui.KeyEsc, h: quitInfo},
+		{m: fileMode, v: "cmdinfo", k: gocui.KeyEsc, h: quitInfo},
 
 		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
 		{m: editMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
@@ -192,6 +199,30 @@ func saveHandler(g *gocui.Gui, v *gocui.View) error {
 	if err := saveMain(vmain, currentFile); err != nil {
 		return err
 	}
+	return nil
+}
+
+func commandInfoHandler(g *gocui.Gui, v *gocui.View) error {
+	maxX, maxY := g.Size()
+	wcmd, hcmd := maxX/2, maxY/2
+	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY/2 - hcmd/2
+	if v, err := g.SetView("cmdinfo", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Editable = true
+		v.Title = "Commands Summary"
+		openFile(v, "Commands.md")
+		g.SetViewOnTop("cmdinfo")
+		g.SetCurrentView("cmdinfo")
+	}
+	return nil
+}
+
+func quitInfo(g *gocui.Gui, v *gocui.View) error {
+	g.SetCurrentView("main")
+	g.SetViewOnTop("main")
+	g.DeleteView("cmdinfo")
 	return nil
 }
 
@@ -310,8 +341,25 @@ func switchModeTo(name string) gocui.KeybindingHandler {
 			return err
 		}
 		g.CurrentMode().OpenMode(g)
+		goodView, x, y := cursorInfo(g)
+		if goodView {
+			info, _ := g.View("infoline")
+			info.Clear()
+			fmt.Fprintf(info, "Currently in "+name+" mode \n"+"Cursor Position : "+x+","+y)
+		}
 		return nil
 	}
+}
+
+func cursorInfo(g *gocui.Gui) (bool, string, string) {
+	v := g.CurrentView()
+	if v.Name() == "main" {
+		x, y := v.Cursor()
+		x1, y1 := v.Origin()
+		xstring, ystring := strconv.Itoa(x+x1), strconv.Itoa(y+y1)
+		return true, xstring, ystring
+	}
+	return false, "", ""
 }
 
 func currTopViewHandler(name string) gocui.KeybindingHandler {
