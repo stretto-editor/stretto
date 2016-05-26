@@ -119,6 +119,13 @@ type demonInput func(g *gocui.Gui, input string) (demonInput, error)
 // (in validateInput handler)
 var currentDemonInput demonInput
 
+func interactive(g *gocui.Gui, s string) {
+	g.SetCurrentView("inputline")
+	g.SetViewOnTop("inputline")
+	g.CurrentView().Title = " " + s + " "
+	g.CurrentView().MoveCursor(0, 0, false)
+}
+
 func searchHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
@@ -127,10 +134,7 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 		return nil, nil
 	}
 
-	g.SetCurrentView("inputline")
-	g.SetViewOnTop("inputline")
-	g.CurrentView().MoveCursor(0, 0, false)
-
+	interactive(g, "Search")
 	return nil
 }
 
@@ -150,10 +154,7 @@ func saveHandler(g *gocui.Gui, v *gocui.View) error {
 			return nil, nil
 		}
 
-		g.SetCurrentView("inputline")
-		g.SetViewOnTop("inputline")
-		g.CurrentView().MoveCursor(0, 0, false)
-
+		interactive(g, "Save")
 		return nil
 	}
 
@@ -179,6 +180,7 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		if input != "n" {
 			if currentFile == "" {
+				interactive(g, "File name")
 				return func(g *gocui.Gui, input string) (demonInput, error) {
 
 					createFile(input)
@@ -201,10 +203,7 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 		return nil, gocui.ErrQuit
 	}
 
-	g.SetCurrentView("inputline")
-	g.SetViewOnTop("inputline")
-	g.CurrentView().MoveCursor(0, 0, false)
-
+	interactive(g, "Save Modifications (y/n)")
 	return nil
 }
 
@@ -218,7 +217,7 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 		}
 
 		searched := input
-
+		interactive(g, "Search and replace - Replace string")
 		return func(g *gocui.Gui, input string) (demonInput, error) {
 			v, _ := g.View("main")
 
@@ -234,10 +233,7 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	}
 
-	g.SetCurrentView("inputline")
-	g.SetViewOnTop("inputline")
-	g.CurrentView().MoveCursor(0, 0, false)
-
+	interactive(g, "Search and replace - Search string")
 	return nil
 }
 
@@ -286,9 +282,7 @@ func exampleInputFunc(g *gocui.Gui, v *gocui.View) error {
 		return nil, nil
 	}
 
-	g.SetCurrentView("inputline")
-	g.SetViewOnTop("inputline")
-	g.CurrentView().MoveCursor(0, 0, false)
+	interactive(g, "Example - copy input to cursor position")
 	return nil
 }
 
@@ -565,10 +559,7 @@ func openFileHandler(g *gocui.Gui, v *gocui.View) error {
 		return nil, nil
 	}
 
-	g.SetCurrentView("inputline")
-	g.SetViewOnTop("inputline")
-	g.CurrentView().MoveCursor(0, 0, false)
-
+	interactive(g, "Open File")
 	return nil
 }
 
@@ -618,9 +609,6 @@ func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
 		return nil, saveMain(v, filename)
 	}
 
-	g.SetCurrentView("inputline")
-	g.SetViewOnTop("inputline")
-	g.CurrentView().MoveCursor(0, 0, false)
-
+	interactive(g, "Save as")
 	return nil
 }
