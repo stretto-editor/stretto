@@ -12,16 +12,18 @@ func layout(g *gocui.Gui) error {
 
 	maxX, maxY := g.Size()
 
-	if v, err := g.SetView("main", -1, -1, maxX, maxY); err != nil {
+	if v, err := g.SetView("main", 0, 0, maxX-1, maxY-1); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 
 		v.Editable = true
+		v.Title = "undefined"
 		// v.Wrap = true
 
 		// check if there is a second argument
 		if len(os.Args) >= 2 {
+			v.Title = os.Args[1]
 			if err := openFile(v, os.Args[1]); err != nil {
 				return err
 			}
@@ -39,7 +41,7 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Editable = true
-		fmt.Fprint(v, "cmdline")
+		v.Title = "Commandline"
 		g.SetViewOnTop("main")
 	}
 
@@ -50,7 +52,7 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Editable = true
-		fmt.Fprint(v, "")
+		v.Title = "Inputline for interactive actions"
 		g.SetViewOnTop("main")
 	}
 
