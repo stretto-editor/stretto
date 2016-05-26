@@ -85,6 +85,7 @@ func initKeybindings(g *gocui.Gui) error {
 
 		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
 		{m: editMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
+		{m: editMode, v: "inputline", k: gocui.KeyEsc, h: escapeInput},
 	}
 
 	for _, kb := range keyBindings {
@@ -316,6 +317,25 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 		g.SetViewOnTop("main")
 	}
 
+	return err
+}
+
+func escapeInput(g *gocui.Gui, v *gocui.View) error {
+
+	if v.Name() != "inputline" {
+		panic("Inputline is not the current view")
+	}
+	if currentDemonInput == nil {
+		panic("No Current Demon Input Available")
+	}
+
+	v.SetCursor(0, 0)
+	v.Clear()
+	var err error
+	currentDemonInput, err = nil, nil
+
+	g.SetCurrentView("main")
+	g.SetViewOnTop("main")
 	return err
 }
 
