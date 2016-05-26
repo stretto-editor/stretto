@@ -168,27 +168,6 @@ func interactive(g *gocui.Gui, s string) {
 	g.CurrentView().MoveCursor(0, 0, false)
 }
 
-func searchHandler(g *gocui.Gui, v *gocui.View) error {
-
-	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		search(g, input)
-		return nil, nil
-	}
-
-	interactive(g, "Search")
-	return nil
-}
-
-func search(g *gocui.Gui, input string) error {
-	v, _ := g.View("main")
-	x, y := v.Cursor()
-
-	if found, newx, newy := searchForward(v, input, x, y); found == true {
-		moveTo(v, newx, newy)
-	}
-	return nil
-}
-
 func saveHandler(g *gocui.Gui, v *gocui.View) error {
 
 	if currentFile == "" {
@@ -255,93 +234,6 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	interactive(g, "Save Modifications (y/n)")
-	return nil
-}
-
-func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
-
-	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		v, _ := g.View("main")
-		x, y := v.Cursor()
-		var xnew, ynew int
-		var found bool
-
-		if found, xnew, ynew = searchForward(v, input, x, y); !found {
-			return nil, nil
-		}
-
-		moveTo(v, xnew, ynew)
-
-		searched := input
-		interactive(g, "Search and replace - Replace string")
-		return func(g *gocui.Gui, input string) (demonInput, error) {
-			v, _ := g.View("main")
-
-			for i := 0; i < len(searched); i++ {
-				v.EditDelete(false)
-			}
-
-			for _, c := range input {
-				v.EditWrite(c)
-			}
-			return nil, nil
-		}, nil
-
-	}
-
-	interactive(g, "Search and replace - Search string")
-	return nil
-}
-
-// func gives how to move from the current origin
-func searchForward(v *gocui.View, pattern string, x int, y int) (bool, int, int) {
-
-	if len(pattern) > 0 {
-
-		var s string
-		var err error
-		var sameline = 1
-
-		for i := 0; err == nil; i++ {
-			s, err = v.Line(y + i)
-			if err == nil {
-
-				if x < len(s) {
-					indice := strings.Index(s[x+sameline:], pattern)
-
-					if indice >= 0 {
-						if sameline == 0 {
-							return true, indice + sameline, y + i
-						}
-						return true, indice + sameline + x, y + i
-					}
-				}
-				x, sameline = 0, 0
-			}
-		}
-	}
-	return false, 0, 0
-}
-
-// Moves the cursor relatively to the origin of the view
-func moveTo(v *gocui.View, x int, y int) error {
-	_, yOrigin := v.Origin()
-	_, ySize := v.Size()
-
-	if y <= ySize {
-
-		v.SetCursor(x, y)
-		return nil
-	}
-
-	// how many times we move from the size of the window
-	var i int
-	for i = 0; y > ySize; i++ {
-		y -= ySize
-
-	}
-	v.SetOrigin(0, yOrigin+i*ySize)
-	v.SetCursor(x, y)
 	return nil
 }
 
@@ -432,75 +324,6 @@ func currTopViewHandler(name string) gocui.KeybindingHandler {
 		}
 		return nil
 	}
-}
-
-func cursorHome(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		_, cy := v.Cursor()
-		_, oy := v.Origin()
-		v.SetOrigin(0, oy)
-		v.SetCursor(0, cy)
-	}
-	return nil
-}
-
-func cursorEnd(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		_, cy := v.Cursor()
-		_, oy := v.Origin()
-		x, _ := v.Size()
-		l, _ := v.Line(cy)
-		if len(l) > x {
-			v.SetOrigin(len(l)-x+1, oy)
-			v.SetCursor(x-1, cy)
-		} else {
-			v.SetCursor(len(l), cy)
-		}
-	}
-	return nil
-}
-
-func goPgUp(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		ox, oy := v.Origin()
-		_, y := v.Size()
-		yOffset := oy - y
-		if yOffset < 0 {
-			if err := v.SetOrigin(ox, 0); err != nil {
-				return err
-			}
-			if oy == 0 {
-				_, cy := v.Cursor()
-				v.MoveCursor(0, -cy, false)
-			} else {
-				v.MoveCursor(0, 0, false)
-			}
-		} else {
-			v.SetOrigin(ox, yOffset)
-			v.MoveCursor(0, 0, false)
-		}
-	}
-	return nil
-}
-
-func goPgDown(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		ox, oy := v.Origin()
-		_, y := v.Size()
-		_, cy := v.Cursor()
-		if y >= v.BufferSize() {
-			v.MoveCursor(0, y-cy, false)
-		} else if oy >= v.BufferSize()-y {
-			v.MoveCursor(0, y, false)
-		} else if oy+2*y >= v.BufferSize() {
-			v.SetOrigin(ox, v.BufferSize()-y+1)
-			v.MoveCursor(0, 0, false)
-		} else {
-			v.SetOrigin(ox, oy+y)
-			v.MoveCursor(0, 0, false)
-		}
-	}
-	return nil
 }
 
 func saveMain(v *gocui.View, filename string) error {
@@ -605,40 +428,6 @@ func openFileHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-/*
-
-func replace(g *gocui.Gui, v *gocui.View) error {
-	go replaceInteractive(g, v)
-	return nil
-}
-
-func replaceInteractive(g *gocui.Gui, v *gocui.View) error {
-	if found, err := searchInteractive(g, v); err != nil || found == false {
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	searched := in.content
-
-	currTopViewHandler("inputline")(g, v)
-	g.CurrentView().MoveCursor(0, 0, false)
-	in.channel <- 1
-
-	for i := 0; i < len(searched); i++ {
-		v.EditDelete(false)
-	}
-
-	replaced := in.content
-
-	for _, c := range replaced {
-		v.EditWrite(c)
-	}
-
-	return nil
-}
-*/
 func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
