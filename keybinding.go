@@ -25,9 +25,49 @@ type input struct {
 var in input
 
 func initModes(g *gocui.Gui) {
-	g.SetMode(cmdMode)
-	g.SetMode(fileMode)
-	g.SetMode(editMode)
+	openCmdMode := func(g *gocui.Gui) error {
+		if err := g.SetCurrentView("cmdline"); err != nil {
+			return err
+		}
+		g.SetViewOnTop("cmdline")
+		v, _ := g.View("cmdline")
+		v.Clear()
+		v.SetOrigin(0, 0)
+		v.SetCursor(0, 0)
+		return nil
+	}
+	closeCmdMode := func(g *gocui.Gui) error {
+		g.SetCurrentView("main")
+		g.SetViewOnTop("main")
+		return nil
+	}
+	openFileMode := func(g *gocui.Gui) error {
+		var v *gocui.View
+		var err error
+		if v, err = g.View("main"); err != nil {
+			return err
+		}
+		v.Editable = false
+		return nil
+	}
+	closeFileMode := func(g *gocui.Gui) error {
+		var v *gocui.View
+		var err error
+		if v, err = g.View("main"); err != nil {
+			return err
+		}
+		v.Editable = true
+		return nil
+	}
+	openEditMode := func(g *gocui.Gui) error {
+		return nil
+	}
+	closeEditMode := func(g *gocui.Gui) error {
+		return nil
+	}
+	g.AddMode(cmdMode, openCmdMode, closeCmdMode)
+	g.AddMode(fileMode, openFileMode, closeFileMode)
+	g.AddMode(editMode, openEditMode, closeEditMode)
 }
 
 func initKeybindings(g *gocui.Gui) error {
@@ -54,16 +94,17 @@ func initKeybindings(g *gocui.Gui) error {
 		// USEFUL
 
 		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
-		{m: fileMode, v: "main", k: gocui.KeyTab, h: switchModeTo(editMode)},
-		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
-		{m: fileMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
-		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
-
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
-		{m: editMode, v: "main", k: gocui.KeyTab, h: switchModeTo(fileMode)},
-		{m: editMode, v: "", k: gocui.KeyCtrlT, h: currTopViewHandler("cmdline")},
-		{m: editMode, v: "cmdline", k: gocui.KeyCtrlT, h: currTopViewHandler("main")},
+		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
+
+		// SWITCH MODE
+		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeTo(editMode)},
+		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeTo(fileMode)},
+
+		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(cmdMode)},
+		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(cmdMode)},
+		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(fileMode)},
 
 		// EDITION
 
@@ -358,22 +399,11 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 
 func switchModeTo(name string) gocui.KeybindingHandler {
 	return func(g *gocui.Gui, v *gocui.View) error {
+		g.CurrentMode().CloseMode(g)
 		if err := g.SetCurrentMode(name); err != nil {
 			return err
 		}
-		if v.Name() == "cmdline" {
-			v.SetCursor(0, 0)
-			v.Clear()
-		}
-		if name == "cmd" {
-			g.SetCurrentView("cmdline")
-		}
-
-		v.Editable = true
-
-		if name == "file" {
-			v.Editable = false
-		}
+		g.CurrentMode().OpenMode(g)
 		return nil
 	}
 }
