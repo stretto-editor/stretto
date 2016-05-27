@@ -36,6 +36,17 @@ func search(g *gocui.Gui, input string) error {
 
 }
 
+func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
+	moveTo(v, x, y)
+	for i := 0; i < len(oldstring); i++ {
+		v.EditDelete(false)
+	}
+
+	for _, c := range newstring {
+		v.EditWrite(c)
+	}
+}
+
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
@@ -48,20 +59,12 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 			return nil, nil
 		}
 
-		moveTo(v, xnew, ynew)
-
 		searched := input
 		interactive(g, "Search and replace - Replace string")
+
 		return func(g *gocui.Gui, input string) (demonInput, error) {
 			v, _ := g.View("main")
-
-			for i := 0; i < len(searched); i++ {
-				v.EditDelete(false)
-			}
-
-			for _, c := range input {
-				v.EditWrite(c)
-			}
+			replaceAt(v, xnew, ynew, searched, input)
 			return nil, nil
 		}, nil
 

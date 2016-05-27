@@ -167,6 +167,9 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: cmdMode, v: "cmdline", k: gocui.KeyEnd, h: cursorEnd},
 		{m: cmdMode, v: "cmdline", k: gocui.KeyArrowLeft, h: moveLeft},
 		{m: cmdMode, v: "cmdline", k: gocui.KeyArrowRight, h: moveRight},
+
+		// CMDLINE
+		{m: cmdMode, v: "cmdline", k: gocui.KeyEnter, h: validateCmd},
 	}
 
 	for _, kb := range keyBindings {
@@ -183,10 +186,6 @@ func initKeybindings(g *gocui.Gui) error {
 func breaklineHandler(g *gocui.Gui, v *gocui.View) error {
 	v.EditNewLine()
 	return nil
-}
-
-func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrQuit
 }
 
 // demonInput defines the prototype for functions that
@@ -206,6 +205,10 @@ func interactive(g *gocui.Gui, s string) {
 	g.SetViewOnTop("inputline")
 	g.CurrentView().Title = " " + s + " "
 	g.CurrentView().MoveCursor(0, 0, false)
+}
+
+func quit(g *gocui.Gui, v *gocui.View) error {
+	return gocui.ErrQuit
 }
 
 func saveHandler(g *gocui.Gui, v *gocui.View) error {
@@ -527,11 +530,7 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 func openFileHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		v, _ := g.View("main")
-		err := openFile(v, input)
-		if err == nil {
-			currentFile = input
-		}
+		openAndDisplayFile(g, input)
 		return nil, nil
 	}
 
@@ -539,18 +538,26 @@ func openFileHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+func openAndDisplayFile(g *gocui.Gui, filename string) {
+	v, _ := g.View("main")
+	err := openFile(v, filename)
+	if err == nil {
+		currentFile = filename
+		v.Title = filename
+	}
+}
+
 func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
-		v, _ := g.View("main")
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			var file *os.File
-			file, _ = os.Create(filename)
-			file.Close()
-		}
-		return nil, saveMain(v, filename)
+		return nil, saveAs(g, filename)
 	}
-
 	interactive(g, "Save as")
 	return nil
+}
+
+func saveAs(g *gocui.Gui, filename string) error {
+	v, _ := g.View("main")
+	createFile(filename)
+	return saveMain(v, filename)
 }
