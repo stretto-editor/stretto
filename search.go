@@ -3,14 +3,18 @@ package main
 import (
 	"strings"
 
+	"errors"
 	"github.com/stretto-editor/gocui"
+)
+
+var (
+	ErrPatternNotFound = errors.New("Unable to find")
 )
 
 func searchHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		search(g, input)
-		return nil, nil
+		return nil, search(g, input)
 	}
 
 	interactive(g, "Search")
@@ -23,8 +27,11 @@ func search(g *gocui.Gui, input string) error {
 
 	if found, newx, newy := searchForward(v, input, x, y); found == true {
 		moveTo(v, newx, newy)
+		return nil
 	}
-	return nil
+
+	return ErrPatternNotFound
+
 }
 
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {

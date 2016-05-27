@@ -47,7 +47,7 @@ func initModes(g *gocui.Gui) {
 		if v, err = g.View("main"); err != nil {
 			return err
 		}
-		v.Editable = false
+		v.SetEditable(false)
 		return nil
 	}
 	closeFileMode := func(g *gocui.Gui) error {
@@ -56,7 +56,7 @@ func initModes(g *gocui.Gui) {
 		if v, err = g.View("main"); err != nil {
 			return err
 		}
-		v.Editable = true
+		v.SetEditable(true)
 		return nil
 	}
 	openEditMode := func(g *gocui.Gui) error {
@@ -95,16 +95,15 @@ func initKeybindings(g *gocui.Gui) error {
 
 		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
-		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
 
 		// SWITCH MODE
-		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeTo(editMode)},
-		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeTo(fileMode)},
+		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(editMode)},
+		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(fileMode)},
 
-		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(cmdMode)},
-		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(cmdMode)},
-		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(fileMode)},
+		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(fileMode)},
 
 		// EDITION
 
@@ -112,7 +111,6 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
 		{m: fileMode, v: "main", k: 'p', h: searchAndReplaceHandler},
-		{m: fileMode, v: "main", k: 'a', h: exampleInputFunc},
 
 		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 
@@ -120,13 +118,12 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: editMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
 		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copy},
 		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: paste},
 
 		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
 		{m: editMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
-		{m: editMode, v: "inputline", k: gocui.KeyEsc, h: escapeInput},
+		{m: editMode, v: "inputline", k: gocui.KeyEsc, h: escapeInputHandler},
 	}
 
 	for _, kb := range keyBindings {
@@ -237,20 +234,6 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func exampleInputFunc(g *gocui.Gui, v *gocui.View) error {
-
-	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		vmain, _ := g.View("main")
-		for _, ch := range input {
-			vmain.EditWrite(ch)
-		}
-		return nil, nil
-	}
-
-	interactive(g, "Example - copy input to cursor position")
-	return nil
-}
-
 func validateInput(g *gocui.Gui, v *gocui.View) error {
 
 	if v.Name() != "inputline" {
@@ -281,49 +264,72 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 		g.SetViewOnTop("main")
 	}
 
+	// ErrQuit should be the only error not handled
+	if err != gocui.ErrQuit {
+		displayError(g, err)
+		return nil
+	}
+
 	return err
 }
 
-func escapeInput(g *gocui.Gui, v *gocui.View) error {
+func displayError(g *gocui.Gui, e error) {
+	if e != nil {
+		v, _ := g.View("main")
+		v.Footer = " " + e.Error() + " "
+	}
+}
 
+func escapeInputHandler(g *gocui.Gui, v *gocui.View) error {
+	return nil
+}
+
+func setTopViewHandlerFactory(viewname string) gocui.KeybindingHandler {
+	return func(g *gocui.Gui, v *gocui.View) error {
+		doSetTopView(g, viewname)
+		return nil
+	}
+}
+func switchModeHandlerFactory(modename string) gocui.KeybindingHandler {
+	return func(g *gocui.Gui, v *gocui.View) error {
+		doSwitchMode(g, modename)
+		return nil
+	}
+}
+
+func doEscapeInput(g *gocui.Gui, v gocui.ViewInterface) {
 	if v.Name() != "inputline" {
 		panic("Inputline is not the current view")
 	}
 	if currentDemonInput == nil {
 		panic("No Current Demon Input Available")
 	}
-
 	v.SetCursor(0, 0)
 	v.Clear()
-	var err error
-	currentDemonInput, err = nil, nil
-
+	currentDemonInput = nil
 	g.SetCurrentView("main")
 	g.SetViewOnTop("main")
-	return err
+	return
+
 }
 
-func switchModeTo(name string) gocui.KeybindingHandler {
-	return func(g *gocui.Gui, v *gocui.View) error {
-		g.CurrentMode().CloseMode(g)
-		if err := g.SetCurrentMode(name); err != nil {
-			return err
-		}
-		g.CurrentMode().OpenMode(g)
-		return nil
+func doSetTopView(g *gocui.Gui, viewname string) error {
+	if err := g.SetCurrentView(viewname); err != nil {
+		return err
 	}
+	if _, err := g.SetViewOnTop(viewname); err != nil {
+		return err
+	}
+	return nil
 }
 
-func currTopViewHandler(name string) gocui.KeybindingHandler {
-	return func(g *gocui.Gui, v *gocui.View) error {
-		if err := g.SetCurrentView(name); err != nil {
-			return err
-		}
-		if _, err := g.SetViewOnTop(name); err != nil {
-			return err
-		}
-		return nil
+func doSwitchMode(g *gocui.Gui, modename string) error {
+	g.CurrentMode().CloseMode(g)
+	if err := g.SetCurrentMode(modename); err != nil {
+		return err
 	}
+	g.CurrentMode().OpenMode(g)
+	return nil
 }
 
 func saveMain(v *gocui.View, filename string) error {
