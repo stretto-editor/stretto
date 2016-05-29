@@ -11,8 +11,9 @@ import (
 func layout(g *gocui.Gui) error {
 
 	maxX, maxY := g.Size()
+	infoHeight := 30
 
-	if v, err := g.SetView("main", 0, 0, maxX-1, maxY-5); err != nil {
+	if v, err := g.SetView("main", 0, 0, maxX-1, maxY-1-infoHeight); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -46,7 +47,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	winput, hinput := maxX*80/100, 2
-	var xinput, yinput int = (maxX - winput) / 2, maxY/2 - hinput/2
+	var xinput, yinput int = (maxX - winput) / 2, maxY - hinput - 5
 	if v, err := g.SetView("inputline", xinput, yinput, xinput+winput, yinput+hinput); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -56,7 +57,7 @@ func layout(g *gocui.Gui) error {
 		g.SetViewOnTop("main")
 	}
 
-	winfo, hinfo := maxX-1, 4
+	winfo, hinfo := maxX-1, infoHeight
 	var xinfo, yinfo int = (maxX - winfo) / 2, maxY - hinfo - 1
 	if v, err := g.SetView("infoline", xinfo, yinfo, xinfo+winfo, yinfo+hinfo); err != nil {
 		if err != gocui.ErrUnknownView {
@@ -85,6 +86,7 @@ func openFile(v *gocui.View, name string) error {
 		return err
 	}
 
+	v.Title = name
 	v.Clear()
 	fmt.Fprintf(v, "%s", f)
 	v.SetOrigin(0, 0)

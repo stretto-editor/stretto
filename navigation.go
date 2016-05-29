@@ -72,3 +72,38 @@ func goPgDown(g *gocui.Gui, v *gocui.View) error {
 	}
 	return nil
 }
+
+func moveLeft(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(-1, 0, false)
+	return nil
+}
+
+func moveRight(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(1, 0, false)
+	return nil
+}
+
+func moveUp(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(0, -1, false)
+	return nil
+}
+
+func moveDown(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(0, 1, false)
+	return nil
+}
+
+func scrollUp(g *gocui.Gui, v *gocui.View) error {
+	_, oy := v.Origin()
+	if oy != 0 {
+		v.SetOrigin(0, oy-1)
+	}
+	return nil
+}
+
+func scrollDown(g *gocui.Gui, v *gocui.View) error {
+	_, oy := v.Origin()
+	// allowed infinite scroll
+	v.SetOrigin(0, oy+1)
+	return nil
+}

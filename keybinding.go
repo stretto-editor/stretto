@@ -81,59 +81,93 @@ func initKeybindings(g *gocui.Gui) error {
 		h gocui.KeybindingHandler
 	}{
 
-		// NAVIGATION
-
-		{m: fileMode, v: "", k: gocui.KeyHome, h: cursorHome},
-		{m: fileMode, v: "", k: gocui.KeyEnd, h: cursorEnd},
-		{m: fileMode, v: "", k: gocui.KeyPgup, h: goPgUp},
-		{m: fileMode, v: "", k: gocui.KeyPgdn, h: goPgDown},
-
-		{m: editMode, v: "", k: gocui.KeyHome, h: cursorHome},
-		{m: editMode, v: "", k: gocui.KeyEnd, h: cursorEnd},
-		{m: editMode, v: "", k: gocui.KeyPgup, h: goPgUp},
-		{m: editMode, v: "", k: gocui.KeyPgdn, h: goPgDown},
-
-		// USEFUL
-
-		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
-		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
-		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
-
-		// SWITCH MODE
-		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeTo(editMode)},
-		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeTo(fileMode)},
+		// ---------------------- COMMON COMMANDS ------------------------- //
 
 		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(cmdMode)},
+		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeTo(editMode)},
+		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+
 		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(cmdMode)},
+		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeTo(fileMode)},
+		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+
 		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeTo(fileMode)},
 
-		// EDITION
+		// ---------------------- MAIN SECTION ---------------------------- //
 
+		// ---------------------- NAVIGATION ------------------------------ //
+
+		{m: fileMode, v: "main", k: gocui.KeyArrowLeft, h: moveLeft},
+		{m: fileMode, v: "main", k: gocui.KeyArrowRight, h: moveRight},
+		{m: fileMode, v: "main", k: gocui.KeyArrowUp, h: moveUp},
+		{m: fileMode, v: "main", k: gocui.KeyArrowDown, h: moveDown},
+		{m: fileMode, v: "main", k: gocui.KeyHome, h: cursorHome},
+		{m: fileMode, v: "main", k: gocui.KeyEnd, h: cursorEnd},
+		{m: fileMode, v: "main", k: gocui.KeyPgup, h: goPgUp},
+		{m: fileMode, v: "main", k: gocui.KeyPgdn, h: goPgDown},
+
+		{m: editMode, v: "main", k: gocui.KeyArrowLeft, h: moveLeft},
+		{m: editMode, v: "main", k: gocui.KeyArrowRight, h: moveRight},
+		{m: editMode, v: "main", k: gocui.KeyArrowUp, h: moveUp},
+		{m: editMode, v: "main", k: gocui.KeyArrowDown, h: moveDown},
+		{m: editMode, v: "main", k: gocui.KeyHome, h: cursorHome},
+		{m: editMode, v: "main", k: gocui.KeyEnd, h: cursorEnd},
+		{m: editMode, v: "main", k: gocui.KeyPgup, h: goPgUp},
+		{m: editMode, v: "main", k: gocui.KeyPgdn, h: goPgDown},
+
+		// ---------------------- USEFUL --- ------------------------------ //
+
+		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
 		{m: fileMode, v: "main", k: 's', h: saveHandler},
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
-		{m: fileMode, v: "main", k: 'p', h: searchAndReplaceHandler},
-		{m: fileMode, v: "main", k: 'a', h: exampleInputFunc},
-		{m: fileMode, v: "main", k: 'z', h: commandInfoHandler},
+		{m: fileMode, v: "main", k: 'b', h: commandInfoHandler},
 
-		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
-
+		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlS, h: saveHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlB, h: commandInfoHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlA, h: exampleInputFunc},
 		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copy},
 		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: paste},
+		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
 
-		{m: editMode, v: "main", k: gocui.KeyCtrlZ, h: commandInfoHandler},
-		{m: editMode, v: "cmdinfo", k: gocui.KeyEsc, h: quitInfo},
+		// ---------------------- INFO SECTION ---------------------------- //
+
+		// ---------------------- NAVIGATION ------------------------------ //
+
+		{m: fileMode, v: "cmdinfo", k: gocui.KeyArrowUp, h: scrollUp},
+		{m: fileMode, v: "cmdinfo", k: gocui.KeyArrowDown, h: scrollDown},
+		{m: fileMode, v: "cmdinfo", k: gocui.KeyPgup, h: goPgUp},
+		{m: fileMode, v: "cmdinfo", k: gocui.KeyPgdn, h: goPgDown},
 		{m: fileMode, v: "cmdinfo", k: gocui.KeyEsc, h: quitInfo},
 
-		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
+		{m: editMode, v: "cmdinfo", k: gocui.KeyArrowUp, h: scrollUp},
+		{m: editMode, v: "cmdinfo", k: gocui.KeyArrowDown, h: scrollDown},
+		{m: editMode, v: "cmdinfo", k: gocui.KeyPgup, h: goPgUp},
+		{m: editMode, v: "cmdinfo", k: gocui.KeyPgdn, h: goPgDown},
+		{m: editMode, v: "cmdinfo", k: gocui.KeyEsc, h: quitInfo},
+
+		// ---------------------- INPUT SECTION --------------------------- //
+
+		// ---------------------- USEFUL --- ------------------------------ //
+
+		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
+		{m: fileMode, v: "inputline", k: gocui.KeyEsc, h: escapeInput},
+
 		{m: editMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 		{m: editMode, v: "inputline", k: gocui.KeyEsc, h: escapeInput},
+
+		// ---------------------- CMD SECTION ---------------------------- //
+
+		// ---------------------- NAVIGATION ------------------------------ //
+
+		{m: cmdMode, v: "cmdline", k: gocui.KeyHome, h: cursorHome},
+		{m: cmdMode, v: "cmdline", k: gocui.KeyEnd, h: cursorEnd},
+		{m: cmdMode, v: "cmdline", k: gocui.KeyArrowLeft, h: moveLeft},
+		{m: cmdMode, v: "cmdline", k: gocui.KeyArrowRight, h: moveRight},
 	}
 
 	for _, kb := range keyBindings {
@@ -204,13 +238,14 @@ func saveHandler(g *gocui.Gui, v *gocui.View) error {
 
 func commandInfoHandler(g *gocui.Gui, v *gocui.View) error {
 	maxX, maxY := g.Size()
-	wcmd, hcmd := maxX/2, maxY/2
+	wcmd, hcmd := maxX*70/100, maxY*70/100
 	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY/2 - hcmd/2
 	if v, err := g.SetView("cmdinfo", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		v.Editable = true
+		v.Editable = false
+		v.Wrap = true
 		v.Title = "Commands Summary"
 		openFile(v, "Commands.md")
 		g.SetViewOnTop("cmdinfo")
