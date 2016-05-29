@@ -4,10 +4,12 @@ import (
 	"strings"
 
 	"errors"
+
 	"github.com/stretto-editor/gocui"
 )
 
 var (
+	// ErrPatternNotFound raised when the pattern is not foud
 	ErrPatternNotFound = errors.New("Unable to find")
 )
 
