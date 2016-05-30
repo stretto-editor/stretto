@@ -1,136 +1,185 @@
 package main
 
 import (
-	"fmt"
-	"testing"
-
+	"errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretto-editor/gocui"
+	"testing"
 )
 
-func TestQuit(t *testing.T) {
-	if err := quit(&gocui.Gui{}, &gocui.View{}); err != gocui.ErrQuit {
-		t.Error("quit should return ErrQuit")
-	}
-}
-
-func TestCursor(t *testing.T) {
+func initGui() *gocui.Gui {
 	g := gocui.NewGui()
 	g.Init()
-	defer g.Close()
-
-	maxX, maxY := g.Size()
-
-	v, _ := g.SetView("testA", 0, 0, maxX, maxY)
-	g.SetCurrentView("testA")
-	fmt.Fprint(v, "foo")
-	cursorEnd(g, v)
-	if x, y := v.Cursor(); x != 3 || y != 0 {
-		t.Errorf("Cursor is not at the end of the line. Current position : %d %d", x, y)
-	}
-	cursorHome(g, v)
-	if x, y := v.Cursor(); x != 0 || y != 0 {
-		t.Error("Cursor is not at the beginning of the line")
-	}
-
+	initModes(g)
+	layout(g) // ! instead of g.SetLayout(layout)
+	// since we do not enter gui's mainloop in any test
+	initKeybindings(g)
+	return g
 }
 
 func TestInitMode(t *testing.T) {
 
-	var testModeNames = []string{
-		"cmd",
-		"file",
-		"edit",
-	}
-
 	g := gocui.NewGui()
 	g.Init()
+	layout(g)
 	defer g.Close()
+
+	expectedMode := []string{
+		"file",
+		"edit",
+		"cmd",
+	}
 
 	initModes(g)
 
-	for _, mn := range testModeNames {
-		if _, err := g.Mode(mn); err != nil {
-			t.Errorf("mode %s doesnt exist", mn)
+	for _, m := range expectedMode {
+		_, e := g.Mode(m)
+		if assert.Nil(t, e) {
+			// should assert presence of the
+			// functions associated with
+			// entering and leaving modes
 		}
 	}
 }
 
-// func TestSwitchMode(t *testing.T) {
-//
-// 	g := gocui.NewGui()
-// 	g.Init()
-// 	defer g.Close()
-//
-// 	g.SetMode("testA")
-// 	g.SetMode("testB")
-// 	g.SetCurrentMode("testA")
-//
-// 	f := switchModeTo("testB")
-// 	f(g, &gocui.View{})
-//
-// 	if m := g.CurrentMode(); m.Name() != "testB" {
-// 		t.Error("Wrong current mode")
-// 	}
-// }
+func TestDoSwitchMode2(t *testing.T) {
+	var e error
 
-func TestPageDownUp(t *testing.T) {
-	g := gocui.NewGui()
-	g.Init()
+	g := initGui()
 	defer g.Close()
 
-	maxX, maxY := g.Size()
-	v, _ := g.SetView("test", 0, 0, maxX, maxY)
-	g.SetCurrentView("test")
-	for i := 0; i < 100; i++ {
-		v.Write([]byte("bar\n"))
+	// default behaviour
+	e = doSwitchMode(g, "cmd")
+	assert.NoError(t, e)
+	m, _ := g.Mode("cmd")
+	assert.Equal(t, g.CurrentMode(), m, "current mode should be cmd")
+
+	// the rest : specific behaviours
+	v, _ := g.View("cmdline")
+	assert.Equal(t, g.CurrentView(), v, "current view should be cmdline")
+
+	e = doSwitchMode(g, "file")
+	assert.NoError(t, e)
+	v, _ = g.View("main")
+	assert.Equal(t, g.CurrentView(), v, "current view should be main")
+	if assert.NotNil(t, g.CurrentView()) {
+		assert.Equal(t, g.CurrentView().Editable, false, "current view should not be editable")
 	}
 
-	goPgDown(g, v)
-	goPgDown(g, v)
-
-	if _, y := v.Origin(); y != 2*maxY {
-		t.Errorf("Found line no %d instead of line no %d", y, 2*maxY)
+	e = doSwitchMode(g, "edit")
+	assert.NoError(t, e)
+	v, _ = g.View("main")
+	assert.Equal(t, g.CurrentView(), v, "current view should be main")
+	if assert.NotNil(t, g.CurrentView()) {
+		assert.Equal(t, g.CurrentView().Editable, true, "current view should be editable")
 	}
 
-	goPgUp(g, v)
-	if _, y := v.Origin(); y != maxY {
-		t.Errorf("Found line no %d instead of line no %d", y, maxY)
+	// unknown mode
+	e = doSwitchMode(g, "notaknowmode")
+	if assert.Error(t, e, "an error was expected") {
+		assert.Equal(t, e, gocui.ErrUnknowMode)
 	}
 }
 
-// func TestCurrTopViewHandler(t *testing.T) {
-//
-// 	g := gocui.NewGui()
-// 	g.Init()
-// 	defer g.Close()
-//
-// 	maxX, maxY := g.Size()
-// 	vA, _ := g.SetView("testA", 0, 0, maxX, maxY)
-// 	fmt.Fprintf(vA, "foo")
-// 	vB, _ := g.SetView("testB", 0, 0, maxX, maxY)
-// 	fmt.Fprintf(vB, "bar")
-// 	g.SetCurrentView("testA")
-//
-// 	f := currTopViewHandler("testB")
-// 	f(g, vA)
-// 	if g.CurrentView() != vB {
-// 		t.Error("testB was expected to be the current view")
-// 	}
-// 	if g.CurrentView().ViewBuffer() != vB.ViewBuffer() {
-// 		t.Error("testB was expected to be on top")
-// 	}
-// }
+func TestDoSetTopView(t *testing.T) {
+	var e error
 
-func TestInitKeybindings(t *testing.T) {
-	g := gocui.NewGui()
-	g.Init()
+	g := initGui()
 	defer g.Close()
 
-	initModes(g)
-	g.SetLayout(layout)
+	e = doSetTopView(g, "cmdline")
+	v, _ := g.View("cmdline")
+	assert.NoError(t, e)
+	assert.Equal(t, g.CurrentView(), v)
 
-	if err := initKeybindings(g); err != nil {
-		t.Error("bad keybindings initialization")
+	e = doSetTopView(g, "notaknownview")
+	if assert.Error(t, e, "an error was expected") {
+		assert.Equal(t, e, gocui.ErrUnknownView)
+	}
+}
+
+func TestValidateInput(t *testing.T) {
+	var e error
+	var v *gocui.View
+
+	g := initGui()
+	defer g.Close()
+
+	// default behaviour :
+	// 1 w/o a next demon
+	v, _ = g.View("inputline")
+	emptyDemon := func(g *gocui.Gui, input string) (demonInput, error) {
+		return nil, nil
+	}
+	currentDemonInput = emptyDemon
+	g.SetCurrentView("inputline")
+	e = validateInput(g, v)
+	assert.NoError(t, e)
+	v, _ = g.View("inputline")
+	assert.NotEqual(t, g.CurrentView(), v, "current view should not be the inputline")
+
+	// 2 with a next demon
+	// thats returning a error
+	emptyDemon2 := func(g *gocui.Gui, input string) (demonInput, error) {
+		return emptyDemon, errors.New("this is an error")
+	}
+	currentDemonInput = emptyDemon2
+	g.SetCurrentView("inputline")
+	e = validateInput(g, v)
+	assert.NoError(t, e)
+	v, _ = g.View("inputline")
+	assert.Equal(t, g.CurrentView(), v, "current view should be the inputline")
+	e = validateInput(g, v)
+	assert.NoError(t, e, "this error should be handled in validateInput")
+	assert.NotEqual(t, g.CurrentView(), v, "current view should not be the inputline")
+
+	// 3 only gocui.ErrQuit should not be handled
+	escapeDemon := func(g *gocui.Gui, input string) (demonInput, error) {
+		return nil, gocui.ErrQuit
+	}
+	currentDemonInput = escapeDemon
+	g.SetCurrentView("inputline")
+	e = validateInput(g, v)
+	if assert.Error(t, e, "an error was expected") {
+		assert.Equal(t, e, gocui.ErrQuit)
 	}
 
+	// unauthorized calls :
+	// 1 not from the inputline
+	v, _ = g.View("main")
+	assert.Panics(t, func() { validateInput(g, v) }, "Inputline is not the current view")
+
+	// 2 no function to use the input
+	v, _ = g.View("inputline")
+	currentDemonInput = nil
+	assert.Panics(t, func() { validateInput(g, v) }, "No Current Demon Input Available")
+}
+
+func TestDoEscapeInput(t *testing.T) {
+	var v *gocui.View
+
+	g := initGui()
+	defer g.Close()
+
+	// default behaviour
+	g.SetCurrentView("inputline")
+	emptyDemon := func(g *gocui.Gui, input string) (demonInput, error) {
+		return nil, nil
+	}
+	currentDemonInput = emptyDemon
+	v, _ = g.View("inputline")
+	doEscapeInput(g, v)
+	v, _ = g.View("main")
+	assert.Equal(t, g.CurrentView(), v, "current view should be the main view")
+	assert.Nil(t, currentDemonInput, "there should not be any demon waiting")
+
+	// unauthorized calls :
+	// 1 not from the inputline
+	v, _ = g.View("main")
+	assert.Panics(t, func() { doEscapeInput(g, v) }, "Inputline is not the current view")
+
+	// 2 no function to use the input
+	v, _ = g.View("inputline")
+	currentDemonInput = nil
+	assert.Panics(t, func() { doEscapeInput(g, v) }, "No Current Demon Input Available")
 }
