@@ -66,7 +66,7 @@ func layout(g *gocui.Gui) error {
 		v.Editable = true
 		v.Footer = "INFO"
 		info, _ := g.View("infoline")
-		fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0,0")
+		fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0:0")
 	}
 
 	return nil

@@ -182,6 +182,7 @@ func initKeybindings(g *gocui.Gui) error {
 
 func breaklineHandler(g *gocui.Gui, v *gocui.View) error {
 	v.EditNewLine()
+	updateInfos(g)
 	return nil
 }
 
@@ -330,6 +331,7 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 	if currentDemonInput == nil {
 		g.SetCurrentView("main")
 		g.SetViewOnTop("main")
+		updateInfos(g)
 	}
 
 	// ErrQuit should be the only error not handled
@@ -378,6 +380,7 @@ func doEscapeInput(g *gocui.Gui, v *gocui.View) {
 	currentDemonInput = nil
 	g.SetCurrentView("main")
 	g.SetViewOnTop("main")
+	updateInfos(g)
 }
 
 func doSetTopView(g *gocui.Gui, viewname string) error {
@@ -521,6 +524,7 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 			v.EditWrite(rune(r))
 		}
 	}
+	updateInfos(g)
 	return nil
 }
 
