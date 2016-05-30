@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretto-editor/gocui"
+	"os"
 	"testing"
 )
 
@@ -44,6 +45,8 @@ func TestInitMode(t *testing.T) {
 
 func TestDoSwitchMode2(t *testing.T) {
 	var e error
+
+	os.Args = []string{"main"}
 
 	g := initGui()
 	defer g.Close()
