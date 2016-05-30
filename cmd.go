@@ -14,10 +14,13 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 	cmdBuff = cmdBuff[:len(cmdBuff)-1]
 	cmd := strings.Split(cmdBuff, " ")
 	switch cmd[0] {
-	case "quit", "q":
+	case "quit", "q!":
 		return quit(g, v)
 	case "qs", "sq":
 		return saveAndQuit(g, cmd)
+	case "c!":
+		vMain, _ := g.View("main")
+		closeView(vMain)
 	case "sc":
 		saveAndClose(g, cmd)
 	case "o", "open":
@@ -30,6 +33,15 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 		}
 	case "replaceall", "repall":
 		replaceAll(g, cmd)
+	case "setwrap":
+		if len(cmd) > 1 {
+			vMain, _ := g.View("main")
+			if cmd[1] == "true" {
+				vMain.Wrap = true
+			} else if cmd[1] == "false" {
+				vMain.Wrap = false
+			}
+		}
 	}
 	v.Clear()
 	v.SetOrigin(0, 0)
@@ -69,9 +81,6 @@ func saveAndClose(g *gocui.Gui, cmd []string) {
 		} else {
 			saveMain(vMain, currentFile)
 		}
-		currentFile = ""
-		vMain.Title = "undefined"
-		vMain.Clear()
-		vMain.SetCursor(0, 0)
+		closeView(vMain)
 	}
 }

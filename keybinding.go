@@ -118,12 +118,14 @@ func initKeybindings(g *gocui.Gui) error {
 		// ---------------------- USEFUL --- ------------------------------ //
 
 		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
+		{m: editMode, v: "main", k: 'w', h: closeFileHandler},
 		{m: fileMode, v: "main", k: 's', h: saveHandler},
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
 		{m: fileMode, v: "main", k: 'b', h: commandInfoHandler},
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlW, h: closeFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlS, h: saveHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
@@ -303,6 +305,40 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 
 	interactive(g, "Save Modifications (y/n)")
 	return nil
+}
+
+func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+		vMain, _ := g.View("main")
+		if input != "n" {
+			if currentFile == "" {
+				interactive(g, "File name")
+				return func(g *gocui.Gui, input string) (demonInput, error) {
+					createFile(input)
+					if err := saveMain(vMain, input); err != nil {
+						return nil, err
+					}
+					closeView(vMain)
+					return nil, nil
+				}, nil
+			}
+			if err := saveMain(vMain, currentFile); err != nil {
+				return nil, err
+			}
+		}
+		closeView(vMain)
+		return nil, nil
+	}
+
+	interactive(g, "Save Modifications (y/n)")
+	return nil
+}
+
+func closeView(v *gocui.View) {
+	v.Clear()
+	v.SetCursor(0, 0)
+	currentFile = ""
+	v.Title = "undefined"
 }
 
 func validateInput(g *gocui.Gui, v *gocui.View) error {
