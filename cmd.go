@@ -21,6 +21,7 @@ var (
 )
 
 func validateCmd(g *gocui.Gui, v *gocui.View) error {
+	var e error
 	if v.Name() != "cmdline" {
 		panic("Cmdline is not the current view")
 	}
@@ -32,9 +33,9 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 	cmd := strings.Fields(cmdBuff)
 	switch cmd[0] {
 	case "quit", "q!":
-		return quit(g, v)
+		e = quit(g, v)
 	case "qs", "sq":
-		return saveAndQuit(g, cmd)
+		e = saveAndQuit(g, cmd)
 	case "c!":
 		vMain, _ := g.View("main")
 		closeView(vMain)
@@ -53,7 +54,7 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 		displayError(g, ErrUnknownCommand)
 	}
 	clearView(v)
-	return nil
+	return e
 }
 
 func saveAndQuit(g *gocui.Gui, cmd []string) error {
@@ -74,7 +75,7 @@ func saveAndQuit(g *gocui.Gui, cmd []string) error {
 }
 
 func replaceAll(g *gocui.Gui, cmd []string) {
-	if len(cmd) == 2 {
+	if len(cmd) == 3 {
 		vMain, _ := g.View("main")
 		for found, x, y := searchForward(vMain, cmd[1], 0, 0); found; found, x, y = searchForward(vMain, cmd[1], x, y) {
 			replaceAt(vMain, x, y, cmd[1], cmd[2])

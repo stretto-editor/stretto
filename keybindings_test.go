@@ -2,10 +2,11 @@ package main
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretto-editor/gocui"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretto-editor/gocui"
 )
 
 func initGui() *gocui.Gui {
@@ -13,6 +14,7 @@ func initGui() *gocui.Gui {
 	g.Init()
 	initModes(g)
 	layout(g) // ! instead of g.SetLayout(layout)
+	os.Args = []string{"main"}
 	// since we do not enter gui's mainloop in any test
 	initKeybindings(g)
 	return g
@@ -45,8 +47,6 @@ func TestInitMode(t *testing.T) {
 
 func TestDoSwitchMode2(t *testing.T) {
 	var e error
-
-	os.Args = []string{"main"}
 
 	g := initGui()
 	defer g.Close()
