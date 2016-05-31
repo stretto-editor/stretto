@@ -12,6 +12,7 @@ func initGui() *gocui.Gui {
 	g := gocui.NewGui()
 	g.Init()
 	initModes(g)
+	defaultLayout(g)
 	layout(g) // ! instead of g.SetLayout(layout)
 	// since we do not enter gui's mainloop in any test
 	initKeybindings(g)
@@ -22,6 +23,7 @@ func TestInitMode(t *testing.T) {
 
 	g := gocui.NewGui()
 	g.Init()
+	defaultLayout(g)
 	layout(g)
 	defer g.Close()
 
@@ -64,7 +66,7 @@ func TestDoSwitchMode2(t *testing.T) {
 	e = doSwitchMode(g, "file")
 	assert.NoError(t, e)
 	v, _ = g.View("main")
-	assert.Equal(t, g.CurrentView(), v, "current view should be main")
+	assert.Equal(t, v, g.CurrentView(), "current view should be main")
 	if assert.NotNil(t, g.CurrentView()) {
 		assert.Equal(t, g.CurrentView().Editable, false, "current view should not be editable")
 	}

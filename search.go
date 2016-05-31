@@ -1,16 +1,9 @@
 package main
 
 import (
-	"strings"
-
-	"errors"
-
+	"fmt"
 	"github.com/stretto-editor/gocui"
-)
-
-var (
-	// ErrPatternNotFound raised when the pattern is not foud
-	ErrPatternNotFound = errors.New("Unable to find")
+	"strings"
 )
 
 func searchHandler(g *gocui.Gui, v *gocui.View) error {
@@ -32,8 +25,7 @@ func search(g *gocui.Gui, input string) error {
 		return nil
 	}
 
-	return ErrPatternNotFound
-
+	return fmt.Errorf("Could not find pattern \"%s\" forward", input)
 }
 
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
@@ -45,7 +37,7 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 		var found bool
 
 		if found, xnew, ynew = searchForward(v, input, x, y); !found {
-			return nil, nil
+			return nil, fmt.Errorf("Could not find pattern \"%s\" forward", input)
 		}
 
 		moveTo(v, xnew, ynew)

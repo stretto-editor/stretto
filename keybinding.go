@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"github.com/stretto-editor/gocui"
@@ -18,13 +17,6 @@ var currentFile string
 const fileMode = "file"
 const editMode = "edit"
 const cmdMode = "cmd"
-
-type input struct {
-	channel chan int
-	content string
-}
-
-var in input
 
 func initModes(g *gocui.Gui) {
 	openCmdMode := func(g *gocui.Gui) error {
@@ -158,6 +150,9 @@ func initKeybindings(g *gocui.Gui) error {
 
 		{m: editMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
 		{m: editMode, v: "inputline", k: gocui.KeyEsc, h: escapeInputHandler},
+
+		{m: fileMode, v: "main", k: gocui.KeyEsc, h: escapeMainHandler},
+		{m: editMode, v: "main", k: gocui.KeyEsc, h: escapeMainHandler},
 
 		// ---------------------- CMD SECTION ---------------------------- //
 
@@ -342,14 +337,24 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 }
 
 func displayError(g *gocui.Gui, e error) {
+	v, _ := g.View("error")
+	v.Clear()
 	if e != nil {
-		v, _ := g.View("main")
-		v.Footer = " " + e.Error() + " "
+		fmt.Fprint(v, e.Error())
+		displayErrorView(g)
+	} else {
+		fmt.Fprint(v, "ok")
+		hideErrorView(g)
 	}
 }
 
 func escapeInputHandler(g *gocui.Gui, v *gocui.View) error {
 	doEscapeInput(g, v)
+	return nil
+}
+
+func escapeMainHandler(g *gocui.Gui, v *gocui.View) error {
+	hideErrorView(g)
 	return nil
 }
 
@@ -383,9 +388,8 @@ func doEscapeInput(g *gocui.Gui, v *gocui.View) {
 func doSetTopView(g *gocui.Gui, viewname string) error {
 	if err := g.SetCurrentView(viewname); err != nil {
 		return err
-	}
-	if _, err := g.SetViewOnTop(viewname); err != nil {
-		return err
+	} else {
+		g.SetViewOnTop(viewname)
 	}
 	return nil
 }
@@ -407,20 +411,23 @@ func updateInfos(g *gocui.Gui) error {
 			return err
 		}
 		info.Clear()
-		fmt.Fprintf(info, "Currently in "+g.CurrentMode().Name()+" mode \n"+"Cursor Position : "+y+":"+x)
+		maxX, _ := info.Size()
+		mode := fmt.Sprintf("%s mode", g.CurrentMode().Name())
+		pos := fmt.Sprintf("%d:%d", y, x)
+		fmt.Fprintf(info, "%s", mode)
+		fmt.Fprintf(info, "%[2]*.[2]*[1]s", pos, maxX-len(mode))
 	}
 	return nil
 }
 
-func cursorInfo(g *gocui.Gui) (bool, string, string) {
+func cursorInfo(g *gocui.Gui) (bool, int, int) {
 	v := g.CurrentView()
 	if v.Name() == "main" {
 		x, y := v.Cursor()
 		x1, y1 := v.Origin()
-		xstring, ystring := strconv.Itoa(x+x1), strconv.Itoa(y+y1)
-		return true, xstring, ystring
+		return true, x + x1, y + y1
 	}
-	return false, "", ""
+	return false, 0, 0
 }
 
 // func currTopViewHandler(name string) gocui.KeybindingHandler {
@@ -487,7 +494,6 @@ func copy(g *gocui.Gui, v *gocui.View) error {
 		// print : error can't find xclip
 		return nil
 	}
-
 	if err := c2.Start(); err != nil {
 		return err
 	}
@@ -497,7 +503,6 @@ func copy(g *gocui.Gui, v *gocui.View) error {
 	if err := w.Close(); err != nil {
 		return err
 	}
-
 	if err := c2.Wait(); err != nil {
 		return err
 	}
@@ -531,8 +536,9 @@ func openFileHandler(g *gocui.Gui, v *gocui.View) error {
 		err := openFile(v, input)
 		if err == nil {
 			currentFile = input
+			return nil, nil
 		}
-		return nil, nil
+		return nil, fmt.Errorf("Could not open file : %s", input)
 	}
 
 	interactive(g, "Open File")

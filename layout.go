@@ -8,67 +8,164 @@ import (
 	"github.com/stretto-editor/gocui"
 )
 
+var requiredViewsInfo map[string]*struct {
+	x, y, w, h int
+	t          string
+	e          bool
+	f          string
+	hi         bool
+	wr         bool
+}
+
+func initRequiredViewsInfo(g *gocui.Gui) {
+
+	requiredViewsInfo = map[string]*struct {
+		x, y, w, h int
+		t          string // Title
+		e          bool   // Editable
+		f          string // Footer
+		hi         bool   // Hidden
+		wr         bool   // Wrap
+	}{
+		"main": {t: "undefined",
+			e: true},
+		"cmdline": {t: "Commandline",
+			e: true},
+		"inputline": {t: "Inputline for interactive actions",
+			e: true},
+		"infoline": {e: true,
+			f: "INFO"},
+		"error": {t: "Error :",
+			e:  true,
+			hi: true,
+			wr: true},
+	}
+
+	setDefaultGeometry(g.Size())
+}
+
+func setDefaultGeometry(maxX, maxY int) {
+	infoHeight := 2
+	// default geometry
+	m, _ := requiredViewsInfo["main"]
+	m.w = maxX + 1
+	m.h = maxY - 1 - infoHeight
+	m.x = -1
+	m.y = 0
+
+	c, _ := requiredViewsInfo["cmdline"]
+	c.w = 30
+	c.h = 2
+	c.x = (maxX - c.w) / 2
+	c.y = maxY - c.h - 10
+
+	inp, _ := requiredViewsInfo["inputline"]
+	inp.w = maxX * 80 / 100
+	inp.h = 2
+	inp.x = (maxX - inp.w) / 2
+	inp.y = maxY - inp.h - 5
+
+	inf, _ := requiredViewsInfo["infoline"]
+	inf.w = maxX - 1
+	inf.h = infoHeight
+	inf.x = (maxX - inf.w) / 2
+	inf.y = maxY - inf.h - 1
+
+	e, _ := requiredViewsInfo["error"]
+	e.w = maxX - 1
+	e.h = 3
+	e.x = (maxX - e.w) / 2
+	e.y = maxY - inf.h - e.h - 1
+}
+
+func updateAllLayout(g *gocui.Gui) {
+	setDefaultGeometry(g.Size())
+
+	if v, _ := g.View("error"); !v.Hidden {
+		m, _ := requiredViewsInfo["main"]
+		i, _ := requiredViewsInfo["inputline"]
+		e, _ := requiredViewsInfo["error"]
+		m.h -= e.h
+		i.y -= e.h
+		g.SetViewOnTop("error")
+	}
+}
+
+func defaultLayout(g *gocui.Gui) error {
+	var v *gocui.View
+	var err error
+
+	initRequiredViewsInfo(g)
+
+	for vname, settings := range requiredViewsInfo {
+		v, err = g.SetView(vname, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h)
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Editable = settings.e
+		v.Title = settings.t
+		v.Footer = settings.f
+		v.Hidden = settings.hi
+		v.Wrap = settings.wr
+	}
+
+	// check if there is a second argument
+	if len(os.Args) >= 2 {
+		v, _ := g.View("main")
+		v.Title = os.Args[1]
+		if err := openFile(v, os.Args[1]); err != nil {
+			return err
+		}
+		currentFile = os.Args[1]
+	}
+
+	info, _ := g.View("infoline")
+	fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0,0")
+
+	// main on top
+	g.SetViewOnTop("main")
+	g.SetCurrentView("main")
+
+	return nil
+}
+
+func displayErrorView(g *gocui.Gui) {
+	v, _ := g.View("error")
+	/*
+		if v.Hidden == true {
+			m, _ := requiredViewsInfo["main"]
+			e, _ := requiredViewsInfo["error"]
+			m.h -= e.h
+		}
+	*/
+	v.Hidden = false
+	g.SetViewOnTop("error")
+}
+
+func hideErrorView(g *gocui.Gui) {
+	v, _ := g.View("error")
+	/*
+		if v.Hidden == false {
+			m, _ := requiredViewsInfo["main"]
+			e, _ := requiredViewsInfo["error"]
+			m.h += e.h
+		}
+	*/
+	v.Hidden = true
+	g.SetViewOnTop("main")
+}
+
 func layout(g *gocui.Gui) error {
 
-	maxX, maxY := g.Size()
-	infoHeight := 3
+	updateAllLayout(g)
 
-	if v, err := g.SetView("main", 0, 0, maxX-1, maxY-1-infoHeight); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-
-		v.Editable = true
-		v.Title = "undefined"
-		// v.Wrap = true
-
-		// check if there is a second argument
-		if len(os.Args) >= 2 {
-			v.Title = os.Args[1]
-			if err := openFile(v, os.Args[1]); err != nil {
+	for vname, settings := range requiredViewsInfo {
+		if _, err := g.SetView(vname, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h); err != nil {
+			if err != gocui.ErrUnknownView {
 				return err
 			}
-			currentFile = os.Args[1]
-		}
-		if err := g.SetCurrentView("main"); err != nil {
-			return err
 		}
 	}
-
-	wcmd, hcmd := 30, 2
-	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY - hcmd - 10
-	if v, err := g.SetView("cmdline", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Editable = true
-		v.Title = "Commandline"
-		g.SetViewOnTop("main")
-	}
-
-	winput, hinput := maxX*80/100, 2
-	var xinput, yinput int = (maxX - winput) / 2, maxY - hinput - 5
-	if v, err := g.SetView("inputline", xinput, yinput, xinput+winput, yinput+hinput); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Editable = true
-		v.Title = "Inputline for interactive actions"
-		g.SetViewOnTop("main")
-	}
-
-	winfo, hinfo := maxX-1, infoHeight
-	var xinfo, yinfo int = (maxX - winfo) / 2, maxY - hinfo - 1
-	if v, err := g.SetView("infoline", xinfo, yinfo, xinfo+winfo, yinfo+hinfo); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Editable = true
-		v.Footer = "INFO"
-		info, _ := g.View("infoline")
-		fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0,0")
-	}
-
 	return nil
 }
 
