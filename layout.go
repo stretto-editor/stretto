@@ -8,6 +8,73 @@ import (
 	"github.com/stretto-editor/gocui"
 )
 
+var requiredViewsInfo map[string]*struct {
+	x, y, w, h int
+	t          string
+	e          bool
+	f          string
+	hi         bool
+	wr         bool
+}
+
+func initRequiredViewsInfo(maxX, maxY int) {
+
+	infoHeight := 3
+
+	requiredViewsInfo = map[string]*struct {
+		x, y, w, h int
+		t          string // Title
+		e          bool   // Editable
+		f          string // Footer
+		hi         bool   // Hidden
+		wr         bool   // Wrap
+	}{
+		"main": {t: "undefined",
+			e: true},
+		"cmdline": {t: "Commandline",
+			e: true},
+		"inputline": {t: "Inputline for interactive actions",
+			e: true},
+		"infoline": {e: true,
+			f: "INFO"},
+		"error": {t: "Error :",
+			e:  true,
+			hi: true,
+			wr: true},
+	}
+
+	// default geometries
+	m, _ := requiredViewsInfo["main"]
+	m.w = maxX + 1
+	m.h = maxY - 1 - infoHeight
+	m.x = -1
+	m.y = 0
+
+	c, _ := requiredViewsInfo["cmdline"]
+	c.w = 30
+	c.h = 2
+	c.x = (maxX - c.w) / 2
+	c.y = maxY - c.h - 10
+
+	inp, _ := requiredViewsInfo["inputline"]
+	inp.w = maxX * 80 / 100
+	inp.h = 2
+	inp.x = (maxX - inp.w) / 2
+	inp.y = maxY - inp.h - 5
+
+	inf, _ := requiredViewsInfo["infoline"]
+	inf.w = maxX - 1
+	inf.h = infoHeight
+	inf.x = (maxX - inf.w) / 2
+	inf.y = maxY - inf.h - 1
+
+	e, _ := requiredViewsInfo["error"]
+	e.w = maxX - 1
+	e.h = 3
+	e.x = (maxX - e.w) / 2
+	e.y = maxY - inf.h - e.h - 1
+}
+
 func defaultLayout(g *gocui.Gui) error {
 	var v *gocui.View
 	var err error
@@ -80,73 +147,6 @@ func layout(g *gocui.Gui) error {
 		}
 	}
 	return nil
-}
-
-var requiredViewsInfo map[string]*struct {
-	x, y, w, h int
-	t          string
-	e          bool
-	f          string
-	hi         bool
-	wr         bool
-}
-
-func initRequiredViewsInfo(maxX, maxY int) {
-
-	infoHeight := 3
-
-	requiredViewsInfo = map[string]*struct {
-		x, y, w, h int
-		t          string // Title
-		e          bool   // Editable
-		f          string // Footer
-		hi         bool   // Hidden
-		wr         bool   // Wrap
-	}{
-		"main": {t: "undefined",
-			e: true},
-		"cmdline": {t: "Commandline",
-			e: true},
-		"inputline": {t: "Inputline for interactive actions",
-			e: true},
-		"infoline": {e: true,
-			f: "INFO"},
-		"error": {t: "Error :",
-			e:  true,
-			hi: true,
-			wr: true},
-	}
-
-	// default geometries
-	m, _ := requiredViewsInfo["main"]
-	m.w = maxX - 1
-	m.h = maxY - 1 - infoHeight
-	m.x = 0
-	m.y = 0
-
-	c, _ := requiredViewsInfo["cmdline"]
-	c.w = 30
-	c.h = 2
-	c.x = (maxX - c.w) / 2
-	c.y = maxY - c.h - 10
-
-	inp, _ := requiredViewsInfo["inputline"]
-	inp.w = maxX * 80 / 100
-	inp.h = 2
-	inp.x = (maxX - inp.w) / 2
-	inp.y = maxY - inp.h - 5
-
-	inf, _ := requiredViewsInfo["infoline"]
-	inf.w = maxX - 1
-	inf.h = infoHeight
-	inf.x = (maxX - inf.w) / 2
-	inf.y = maxY - inf.h - 1
-
-	e, _ := requiredViewsInfo["error"]
-	e.w = maxX - 1
-	e.h = 3
-	e.x = (maxX - e.w) / 2
-	e.y = maxY - inf.h - e.h - 1
 }
 
 func openFile(v *gocui.View, name string) error {
