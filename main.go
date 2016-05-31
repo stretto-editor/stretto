@@ -28,6 +28,7 @@ func main() {
 	initModes(g)
 
 	g.SetLayout(layout)
+	defaultLayout(g)
 	if err := initKeybindings(g); err != nil {
 		log.Fatalln(err)
 	}
