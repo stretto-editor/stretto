@@ -2,10 +2,14 @@ package main
 
 import (
 	"errors"
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretto-editor/gocui"
-	"os"
-	"testing"
 )
 
 func initGui() *gocui.Gui {
@@ -185,4 +189,110 @@ func TestDoEscapeInput(t *testing.T) {
 	v, _ = g.View("inputline")
 	currentDemonInput = nil
 	assert.Panics(t, func() { doEscapeInput(g, v) }, "No Current Demon Input Available")
+}
+
+func TestDoCursorInfo(t *testing.T) {
+	g := initGui()
+	defer g.Close()
+
+	g.SetCurrentView("main")
+	g.CurrentView().SetCursor(4, 5)
+	inMainView, _, _ := cursorInfo(g)
+	//rx, ry := g.CurrentView().Cursor()
+
+	assert.Equal(t, inMainView, true, "Current view should be main")
+	//assert.Equal(t, x, rx, "X value should be equal")
+	//assert.Equal(t, y, ry, "Y value should be equal")
+
+	g.SetCurrentView("inputline")
+	inMainView, _, _ = cursorInfo(g)
+
+	assert.Equal(t, inMainView, false, "Current view shouldn't be main")
+
+}
+
+func TestDoInfoView(t *testing.T) {
+	var v2 *gocui.View
+
+	g := initGui()
+	defer g.Close()
+
+	v := g.CurrentView()
+	e := commandInfoHandler(g, v)
+	assert.Nil(t, e)
+
+	v = g.CurrentView()
+	v2, e = g.View("cmdinfo")
+
+	assert.Equal(t, v, v2, "The view should be command info")
+	assert.Nil(t, e)
+
+	e = quitInfo(g, v)
+	assert.Nil(t, e)
+
+	_, e = g.View("cmdinfo")
+	assert.Equal(t, e, errors.New("unknown view"), "No view should be found")
+
+}
+
+func TestDoQuitHandler(t *testing.T) {
+	g := initGui()
+	defer g.Close()
+	v, _ := g.View("inputline")
+	currentFile = "unknownfile"
+
+	// espace with an empty input
+	e := quitHandler(g, v)
+	assert.Nil(t, e, "No error should be found")
+
+	e = validateInput(g, v)
+	assert.Nil(t, e, "Input shoud be valid")
+
+	currentFile = ""
+
+	e = quitHandler(g, v)
+	assert.Nil(t, e, "No error should be found")
+	e = validateInput(g, v)
+	assert.Nil(t, e, "Input shoud be valid")
+
+	e = validateInput(g, v)
+	assert.NotNil(t, e, "Input already left")
+}
+
+func TestDoCopy(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+	g := initGui()
+	defer g.Close()
+	teststring := "testinput"
+	v, e := g.View("main")
+
+	c := exec.Command("xclip", "-i")
+	c.Stdin = strings.NewReader(teststring)
+	c.Start()
+
+	e = copy(g, v)
+	assert.Nil(t, e)
+
+	out, _ := exec.Command("xclip", "-o", "-selection", "c").Output()
+	assert.Equal(t, string(out), teststring, "Should be equal")
+
+}
+
+func TestDoPaste(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
+	g := initGui()
+	v, _ := g.View("main")
+	defer g.Close()
+	teststring := "testinput"
+
+	c := exec.Command("xclip", "-i", "-selection", "c")
+	c.Stdin = strings.NewReader(teststring)
+
+	paste(g, v)
+	assert.Equal(t, teststring+"\n", v.Buffer(), "Content shoud be the same")
 }

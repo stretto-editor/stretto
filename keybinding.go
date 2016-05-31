@@ -151,6 +151,18 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// ---------------------- INPUT SECTION --------------------------- //
 
+		// ---------------------- NAVIGATION ------------------------------ //
+
+		{m: fileMode, v: "inputline", k: gocui.KeyHome, h: cursorHome},
+		{m: fileMode, v: "inputline", k: gocui.KeyEnd, h: cursorEnd},
+		{m: fileMode, v: "inputline", k: gocui.KeyArrowLeft, h: moveLeft},
+		{m: fileMode, v: "inputline", k: gocui.KeyArrowRight, h: moveRight},
+
+		{m: editMode, v: "inputline", k: gocui.KeyHome, h: cursorHome},
+		{m: editMode, v: "inputline", k: gocui.KeyEnd, h: cursorEnd},
+		{m: editMode, v: "inputline", k: gocui.KeyArrowLeft, h: moveLeft},
+		{m: editMode, v: "inputline", k: gocui.KeyArrowRight, h: moveRight},
+
 		// ---------------------- USEFUL --- ------------------------------ //
 
 		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},

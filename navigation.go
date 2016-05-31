@@ -78,26 +78,22 @@ func goPgDown(g *gocui.Gui, v *gocui.View) error {
 }
 
 func moveLeft(g *gocui.Gui, v *gocui.View) error {
-	v.MoveCursor(-1, 0, false)
-	updateInfos(g)
+	moveAndInfo(g, v, -1, 0, false)
 	return nil
 }
 
 func moveRight(g *gocui.Gui, v *gocui.View) error {
-	v.MoveCursor(1, 0, false)
-	updateInfos(g)
+	moveAndInfo(g, v, 1, 0, false)
 	return nil
 }
 
 func moveUp(g *gocui.Gui, v *gocui.View) error {
-	v.MoveCursor(0, -1, false)
-	updateInfos(g)
+	moveAndInfo(g, v, 0, -1, false)
 	return nil
 }
 
 func moveDown(g *gocui.Gui, v *gocui.View) error {
-	v.MoveCursor(0, 1, false)
-	updateInfos(g)
+	moveAndInfo(g, v, 0, 1, false)
 	return nil
 }
 
@@ -116,4 +112,9 @@ func scrollDown(g *gocui.Gui, v *gocui.View) error {
 	v.SetOrigin(0, oy+1)
 	updateInfos(g)
 	return nil
+}
+
+func moveAndInfo(g *gocui.Gui, v *gocui.View, x int, y int, b bool) {
+	v.MoveCursor(x, y, b)
+	updateInfos(g)
 }
