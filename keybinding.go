@@ -341,10 +341,10 @@ func displayError(g *gocui.Gui, e error) {
 	v.Clear()
 	if e != nil {
 		fmt.Fprint(v, e.Error())
+		displayErrorView(g)
 	} else {
 		fmt.Fprint(v, "ok")
 	}
-	displayErrorView(g)
 }
 
 func escapeInputHandler(g *gocui.Gui, v *gocui.View) error {

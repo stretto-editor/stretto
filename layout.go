@@ -17,9 +17,7 @@ var requiredViewsInfo map[string]*struct {
 	wr         bool
 }
 
-func initRequiredViewsInfo(maxX, maxY int) {
-
-	infoHeight := 2
+func initRequiredViewsInfo(g *gocui.Gui) {
 
 	requiredViewsInfo = map[string]*struct {
 		x, y, w, h int
@@ -43,7 +41,12 @@ func initRequiredViewsInfo(maxX, maxY int) {
 			wr: true},
 	}
 
-	// default geometries
+	setDefaultGeometry(g.Size())
+}
+
+func setDefaultGeometry(maxX, maxY int) {
+	infoHeight := 2
+	// default geometry
 	m, _ := requiredViewsInfo["main"]
 	m.w = maxX + 1
 	m.h = maxY - 1 - infoHeight
@@ -75,13 +78,24 @@ func initRequiredViewsInfo(maxX, maxY int) {
 	e.y = maxY - inf.h - e.h - 1
 }
 
+func updateAllLayout(g *gocui.Gui) {
+	setDefaultGeometry(g.Size())
+
+	if v, _ := g.View("error"); !v.Hidden {
+		m, _ := requiredViewsInfo["main"]
+		i, _ := requiredViewsInfo["inputline"]
+		e, _ := requiredViewsInfo["error"]
+		m.h -= e.h
+		i.y -= e.h
+		g.SetViewOnTop("error")
+	}
+}
+
 func defaultLayout(g *gocui.Gui) error {
 	var v *gocui.View
 	var err error
 
-	maxX, maxY := g.Size()
-
-	initRequiredViewsInfo(maxX, maxY)
+	initRequiredViewsInfo(g)
 
 	for vname, settings := range requiredViewsInfo {
 		v, err = g.SetView(vname, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h)
@@ -117,27 +131,33 @@ func defaultLayout(g *gocui.Gui) error {
 
 func displayErrorView(g *gocui.Gui) {
 	v, _ := g.View("error")
-	if v.Hidden == true {
-		m, _ := requiredViewsInfo["main"]
-		e, _ := requiredViewsInfo["error"]
-		m.h -= e.h
-	}
+	/*
+		if v.Hidden == true {
+			m, _ := requiredViewsInfo["main"]
+			e, _ := requiredViewsInfo["error"]
+			m.h -= e.h
+		}
+	*/
 	v.Hidden = false
 	g.SetViewOnTop("error")
 }
 
 func hideErrorView(g *gocui.Gui) {
 	v, _ := g.View("error")
-	if v.Hidden == false {
-		m, _ := requiredViewsInfo["main"]
-		e, _ := requiredViewsInfo["error"]
-		m.h += e.h
-	}
+	/*
+		if v.Hidden == false {
+			m, _ := requiredViewsInfo["main"]
+			e, _ := requiredViewsInfo["error"]
+			m.h += e.h
+		}
+	*/
 	v.Hidden = true
 	g.SetViewOnTop("main")
 }
 
 func layout(g *gocui.Gui) error {
+
+	updateAllLayout(g)
 
 	for vname, settings := range requiredViewsInfo {
 		if _, err := g.SetView(vname, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h); err != nil {
