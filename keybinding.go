@@ -344,6 +344,7 @@ func displayError(g *gocui.Gui, e error) {
 		displayErrorView(g)
 	} else {
 		fmt.Fprint(v, "ok")
+		hideErrorView(g)
 	}
 }
 
