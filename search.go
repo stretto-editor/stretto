@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// ErrPatternNotFound raised when the pattern is not foud
+	// ErrPatternNotFound raised when the pattern is not found
 	ErrPatternNotFound = errors.New("Unable to find")
 )
 

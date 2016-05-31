@@ -523,7 +523,7 @@ func copy(g *gocui.Gui, v *gocui.View) error {
 	c2.Stdin = r
 
 	if err := c1.Start(); err != nil {
-		// print : error can't find xclip
+		displayError(g, err)
 		return nil
 	}
 
@@ -550,7 +550,7 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 	out, err := exec.Command("xclip", "-o", "-selection", "c").Output()
 	s := string(out)
 	if err != nil {
-		//print error : can't find xclip
+		displayError(g, err)
 		return nil
 	}
 	for _, r := range s {
