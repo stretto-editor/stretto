@@ -19,7 +19,7 @@ var requiredViewsInfo map[string]*struct {
 
 func initRequiredViewsInfo(maxX, maxY int) {
 
-	infoHeight := 3
+	infoHeight := 2
 
 	requiredViewsInfo = map[string]*struct {
 		x, y, w, h int

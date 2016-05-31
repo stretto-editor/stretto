@@ -3,13 +3,13 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/stretto-editor/gocui"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"strings"
+
+	"github.com/stretto-editor/gocui"
 )
 
 var currentFile string
@@ -410,20 +410,23 @@ func updateInfos(g *gocui.Gui) error {
 			return err
 		}
 		info.Clear()
-		fmt.Fprintf(info, "Currently in "+g.CurrentMode().Name()+" mode \n"+"Cursor Position : "+y+":"+x)
+		maxX, _ := info.Size()
+		mode := fmt.Sprintf("%s mode", g.CurrentMode().Name())
+		pos := fmt.Sprintf("%d:%d", y, x)
+		fmt.Fprintf(info, "%s", mode)
+		fmt.Fprintf(info, "%[2]*.[2]*[1]s", pos, maxX-len(mode))
 	}
 	return nil
 }
 
-func cursorInfo(g *gocui.Gui) (bool, string, string) {
+func cursorInfo(g *gocui.Gui) (bool, int, int) {
 	v := g.CurrentView()
 	if v.Name() == "main" {
 		x, y := v.Cursor()
 		x1, y1 := v.Origin()
-		xstring, ystring := strconv.Itoa(x+x1), strconv.Itoa(y+y1)
-		return true, xstring, ystring
+		return true, x + x1, y + y1
 	}
-	return false, "", ""
+	return false, 0, 0
 }
 
 // func currTopViewHandler(name string) gocui.KeybindingHandler {
