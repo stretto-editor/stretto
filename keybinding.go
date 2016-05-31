@@ -335,10 +335,15 @@ func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func closeView(v *gocui.View) {
-	v.Clear()
-	v.SetCursor(0, 0)
+	clearView(v)
 	currentFile = ""
 	v.Title = "undefined"
+}
+
+func clearView(v *gocui.View) {
+	v.Clear()
+	v.SetOrigin(0, 0)
+	v.SetCursor(0, 0)
 }
 
 func validateInput(g *gocui.Gui, v *gocui.View) error {

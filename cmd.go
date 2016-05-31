@@ -52,9 +52,7 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 	default:
 		displayError(g, ErrUnknownCommand)
 	}
-	v.Clear()
-	v.SetOrigin(0, 0)
-	v.SetCursor(0, 0)
+	clearView(v)
 	return nil
 }
 
