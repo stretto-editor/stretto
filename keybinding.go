@@ -1,70 +1,24 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
-	"runtime"
-	"strings"
 
 	"github.com/stretto-editor/gocui"
 )
 
 var currentFile string
 
-const fileMode = "file"
-const editMode = "edit"
-const cmdMode = "cmd"
+// demonInput defines the prototype for functions that
+// should be called later in validateInput
+// A demonInput returns the next demonInput to be called,
+// or nil if there is noone
+type demonInput func(g *gocui.Gui, input string) (demonInput, error)
 
-func initModes(g *gocui.Gui) {
-	openCmdMode := func(g *gocui.Gui) error {
-		if err := g.SetCurrentView("cmdline"); err != nil {
-			return err
-		}
-		g.SetViewOnTop("cmdline")
-		v, _ := g.View("cmdline")
-		v.Clear()
-		v.SetOrigin(0, 0)
-		v.SetCursor(0, 0)
-		return nil
-	}
-	closeCmdMode := func(g *gocui.Gui) error {
-		g.SetCurrentView("main")
-		g.SetViewOnTop("main")
-		return nil
-	}
-	openFileMode := func(g *gocui.Gui) error {
-		var v *gocui.View
-		var err error
-		if v, err = g.View("main"); err != nil {
-			return err
-		}
-		v.SetEditable(false)
-		return nil
-	}
-	closeFileMode := func(g *gocui.Gui) error {
-		var v *gocui.View
-		var err error
-		if v, err = g.View("main"); err != nil {
-			return err
-		}
-		v.SetEditable(true)
-		return nil
-	}
-	openEditMode := func(g *gocui.Gui) error {
-		return nil
-	}
-	closeEditMode := func(g *gocui.Gui) error {
-		return nil
-	}
-	g.AddMode(cmdMode, openCmdMode, closeCmdMode)
-	g.AddMode(fileMode, openFileMode, closeFileMode)
-	g.AddMode(editMode, openEditMode, closeEditMode)
-
-	g.SetCurrentMode(editMode)
-}
+// current is the next demonInput to be called
+// In an handler (that use the inputline), it should be set.
+// It is set back to nil once all the call have been made
+// (in validateInput handler)
+var currentDemonInput demonInput
 
 func initKeybindings(g *gocui.Gui) error {
 
@@ -116,17 +70,17 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 's', h: saveHandler},
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
-		{m: fileMode, v: "main", k: 'b', h: commandInfoHandler},
+		{m: fileMode, v: "main", k: 'b', h: docHandler},
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlW, h: closeFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlS, h: saveHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlB, h: commandInfoHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlB, h: docHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copy},
-		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: paste},
+		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copyHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: pasteHandler},
 		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
 
 		// ---------------------- INFO SECTION ---------------------------- //
@@ -197,18 +151,6 @@ func breaklineHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-// demonInput defines the prototype for functions that
-// should be called later in validateInput
-// A demonInput returns the next demonInput to be called,
-// or nil if there is noone
-type demonInput func(g *gocui.Gui, input string) (demonInput, error)
-
-// current is the next demonInput to be called
-// In an handler (that use the inputline), it should be set.
-// It is set back to nil once all the call have been made
-// (in validateInput handler)
-var currentDemonInput demonInput
-
 func interactive(g *gocui.Gui, s string) {
 	g.SetCurrentView("inputline")
 	displayInputLine(g)
@@ -221,18 +163,14 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func saveHandler(g *gocui.Gui, v *gocui.View) error {
-
 	if currentFile == "" {
-
 		currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-
 			createFile(input)
 
 			v, _ := g.View("main")
 			if err := saveMain(v, input); err != nil {
 				return nil, err
 			}
-
 			return nil, nil
 		}
 
@@ -247,19 +185,11 @@ func saveHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func commandInfoHandler(g *gocui.Gui, v *gocui.View) error {
-	maxX, maxY := g.Size()
-	wcmd, hcmd := maxX*70/100, maxY*70/100
-	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY/2 - hcmd/2
-	if v, err := g.SetView("cmdinfo", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Editable = false
-		v.Wrap = true
-		v.Title = "Commands Summary"
+func docHandler(g *gocui.Gui, v *gocui.View) error {
+	if v, err := createDocView(g); err != nil {
+		displayError(g, err)
+	} else {
 		openFile(v, "Commands.md")
-		g.SetViewOnTop("cmdinfo")
 		g.SetCurrentView("cmdinfo")
 	}
 	return nil
@@ -272,18 +202,7 @@ func quitInfo(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-// create the file in the directory of the
-func createFile(filename string) {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		var file *os.File
-		file, _ = os.Create(filename)
-		file.Close()
-		currentFile = filename
-	}
-}
-
 func quitHandler(g *gocui.Gui, v *gocui.View) error {
-
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		if input != "n" {
 			if currentFile == "" {
@@ -410,24 +329,6 @@ func escapeInputHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func escapeMainHandler(g *gocui.Gui, v *gocui.View) error {
-	hideErrorView(g)
-	return nil
-}
-
-func setTopViewHandlerFactory(viewname string) gocui.KeybindingHandler {
-	return func(g *gocui.Gui, v *gocui.View) error {
-		doSetTopView(g, viewname)
-		return nil
-	}
-}
-func switchModeHandlerFactory(modename string) gocui.KeybindingHandler {
-	return func(g *gocui.Gui, v *gocui.View) error {
-		doSwitchMode(g, modename)
-		return nil
-	}
-}
-
 func doEscapeInput(g *gocui.Gui, v *gocui.View) {
 	if v.Name() != "inputline" {
 		panic("Inputline is not the current view")
@@ -443,12 +344,16 @@ func doEscapeInput(g *gocui.Gui, v *gocui.View) {
 	updateInfos(g)
 }
 
-func doSetTopView(g *gocui.Gui, viewname string) error {
-	if err := g.SetCurrentView(viewname); err != nil {
-		return err
-	}
-	g.SetViewOnTop(viewname)
+func escapeMainHandler(g *gocui.Gui, v *gocui.View) error {
+	hideErrorView(g)
 	return nil
+}
+
+func switchModeHandlerFactory(modename string) gocui.KeybindingHandler {
+	return func(g *gocui.Gui, v *gocui.View) error {
+		doSwitchMode(g, modename)
+		return nil
+	}
 }
 
 func doSwitchMode(g *gocui.Gui, modename string) error {
@@ -487,139 +392,33 @@ func cursorInfo(g *gocui.Gui) (bool, int, int) {
 	return false, 0, 0
 }
 
-// func currTopViewHandler(name string) gocui.KeybindingHandler {
-// 	return func(g *gocui.Gui, v *gocui.View) error {
-// 		if err := g.SetCurrentView(name); err != nil {
-// 			return err
-// 		}
-// 		if _, err := g.SetViewOnTop(name); err != nil {
-// 			return err
-// 		}
-// 		return nil
-// 	}
-// 	g.CurrentMode().OpenMode(g)
-// 	return nil
-// }
-
-func saveMain(v *gocui.View, filename string) error {
-	if filename == "" {
-		return nil
-	}
-	f, err := os.OpenFile(filename, os.O_WRONLY, 0666)
-	if err != nil {
-		if strings.HasSuffix(err.Error(), "permission denied") {
-			return nil
-		}
-		return err
-	}
-	defer f.Close()
-
-	p := make([]byte, 5)
-	v.Rewind()
-	var size int64 = -1
-	for {
-		n, err := v.Read(p)
-		size += int64(n)
-		if n > 0 {
-			if _, er := f.Write(p[:n]); err != nil {
-				return er
-			}
-		}
-		if err == io.EOF {
-			f.Truncate(size * int64(binary.Size(p[0])))
-			break
-		}
-		if err != nil {
-			return err
-		}
+func copyHandler(g *gocui.Gui, v *gocui.View) error {
+	if err := copy(); err != nil {
+		displayError(g, err)
 	}
 	return nil
 }
 
-func copy(g *gocui.Gui, v *gocui.View) error {
-	//http://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-		return nil
-	}
-	c1 := exec.Command("xclip", "-o")
-	c2 := exec.Command("xclip", "-i", "-selection", "c")
-	r, w := io.Pipe()
-	c1.Stdout = w
-	c2.Stdin = r
-
-	if err := c1.Start(); err != nil {
+func pasteHandler(g *gocui.Gui, v *gocui.View) error {
+	if err := paste(v); err != nil {
 		displayError(g, err)
-		return nil
-	}
-	if err := c2.Start(); err != nil {
-		return err
-	}
-	if err := c1.Wait(); err != nil {
-		return err
-	}
-	if err := w.Close(); err != nil {
-		return err
-	}
-	if err := c2.Wait(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func paste(g *gocui.Gui, v *gocui.View) error {
-	if runtime.GOOS == "windows" {
-		return nil
-	}
-	out, err := exec.Command("xclip", "-o", "-selection", "c").Output()
-	s := string(out)
-	if err != nil {
-		displayError(g, err)
-		return nil
-	}
-	for _, r := range s {
-		if rune(r) == '\n' {
-			v.EditNewLine()
-		} else {
-			v.EditWrite(rune(r))
-		}
 	}
 	updateInfos(g)
 	return nil
 }
 
 func openFileHandler(g *gocui.Gui, v *gocui.View) error {
-
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-
 		return nil, openAndDisplayFile(g, input)
 	}
-
 	interactive(g, "Open File")
 	return nil
 }
 
-func openAndDisplayFile(g *gocui.Gui, filename string) error {
-	v, _ := g.View("main")
-	err := openFile(v, filename)
-	if err == nil {
-		currentFile = filename
-		v.Title = filename
-		return nil
-	}
-	return fmt.Errorf("Could not open file : %s", filename)
-}
-
 func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
-
 	currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
 		return nil, saveAs(g, filename)
 	}
 	interactive(g, "Save as")
 	return nil
-}
-
-func saveAs(g *gocui.Gui, filename string) error {
-	v, _ := g.View("main")
-	createFile(filename)
-	return saveMain(v, filename)
 }

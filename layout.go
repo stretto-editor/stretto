@@ -151,40 +151,17 @@ func hideInputLine(g *gocui.Gui) {
 
 func displayErrorView(g *gocui.Gui) {
 	v, _ := g.View("error")
-	/*
-				if v.Hidden == true {
-					m, _ := requiredViewsInfo["main"]
-					e, _ := requiredViewsInfo["error"]
-					m.h -= e.h
-				}
-		<<<<<<< HEAD
-	*/
 	v.Hidden = false
 	g.SetViewOnTop("error")
 }
 
 func hideErrorView(g *gocui.Gui) {
 	v, _ := g.View("error")
-	/*
-		if v.Hidden == false {
-			m, _ := requiredViewsInfo["main"]
-			e, _ := requiredViewsInfo["error"]
-			m.h += e.h
-		}
-	*/
 	v.Hidden = true
 	g.SetViewOnTop("main")
 }
 
 func layout(g *gocui.Gui) error {
-	// =======
-	// 	v.Editable = true
-	// 	v.Footer = "INFO"
-	// 	info, _ := g.View("infoline")
-	// 	fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0:0")
-	// }
-	// >>>>>>> eventManager
-
 	updateAllLayout(g)
 
 	for vname, settings := range requiredViewsInfo {
@@ -198,7 +175,6 @@ func layout(g *gocui.Gui) error {
 }
 
 func openFile(v *gocui.View, name string) error {
-
 	// inexisting view
 	if v == nil {
 		return gocui.ErrUnknownView
@@ -217,4 +193,28 @@ func openFile(v *gocui.View, name string) error {
 	v.SetOrigin(0, 0)
 	v.SetCursor(0, 0)
 	return nil
+}
+
+func displayDoc(g *gocui.Gui) {
+	v, err := g.View("cmdinfo")
+	if err != nil {
+		v.Hidden = false
+		g.SetViewOnTop("cmdinfo")
+	}
+}
+
+func createDocView(g *gocui.Gui) (*gocui.View, error) {
+	maxX, maxY := g.Size()
+	wcmd, hcmd := maxX*70/100, maxY*70/100
+	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY/2 - hcmd/2
+	var v *gocui.View
+	var err error
+	if v, err = g.SetView("cmdinfo", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil && err == gocui.ErrUnknownView {
+		v.Editable = false
+		v.Wrap = true
+		v.Title = "Commands Summary"
+		return v, nil
+	}
+	return nil, err
+
 }

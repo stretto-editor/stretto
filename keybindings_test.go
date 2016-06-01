@@ -89,23 +89,6 @@ func TestDoSwitchMode2(t *testing.T) {
 	}
 }
 
-func TestDoSetTopView(t *testing.T) {
-	var e error
-
-	g := initGui()
-	defer g.Close()
-
-	e = doSetTopView(g, "cmdline")
-	v, _ := g.View("cmdline")
-	assert.NoError(t, e)
-	assert.Equal(t, g.CurrentView(), v)
-
-	e = doSetTopView(g, "notaknownview")
-	if assert.Error(t, e, "an error was expected") {
-		assert.Equal(t, e, gocui.ErrUnknownView)
-	}
-}
-
 func TestValidateInput(t *testing.T) {
 	var e error
 	var v *gocui.View
@@ -219,7 +202,7 @@ func TestDoInfoView(t *testing.T) {
 	defer g.Close()
 
 	v := g.CurrentView()
-	e := commandInfoHandler(g, v)
+	e := docHandler(g, v)
 	assert.Nil(t, e)
 
 	v = g.CurrentView()
@@ -267,13 +250,13 @@ func TestDoCopy(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	teststring := "testinput"
-	v, e := g.View("main")
+	_, e := g.View("main")
 
 	c := exec.Command("xclip", "-i")
 	c.Stdin = strings.NewReader(teststring)
 	c.Start()
 
-	e = copy(g, v)
+	e = copy()
 	assert.Nil(t, e)
 
 	out, _ := exec.Command("xclip", "-o", "-selection", "c").Output()
@@ -294,7 +277,7 @@ func TestDoPaste(t *testing.T) {
 	c := exec.Command("xclip", "-i", "-selection", "c")
 	c.Stdin = strings.NewReader(teststring)
 
-	paste(g, v)
+	paste(v)
 	assert.Equal(t, teststring+"\n", v.Buffer(), "Content shoud be the same")
 }
 
