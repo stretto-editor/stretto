@@ -30,6 +30,10 @@ Ctrl+O      | O             | Open a file
 Ctrl+Q      | Ctrl+Q        | Quit
 Tab         | Tab           | Switch between modes (no visual effects)
 Ctrl+T      | Ctrl+T        | Open/close command line
+Ctrl+B      | B             | Open commands information
+Ctrl+W      | W             | Close the current file
+
+Escpace commands view with escape button.
 
 ## Edition
 
