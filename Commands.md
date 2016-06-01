@@ -42,9 +42,29 @@ Edition     | File          | Actions
 Ctrl+S      | S             | Save
 Ctrl+U      | U             | Save As
 Ctrl+F      | F             | Search forward for next occurence
-Ctrl+P      | P             | Search and replace next occurence
+Ctrl+P      |               | Search and replace next occurence
 Ctrl+C      |               | Copy
 Ctrl+V      |               | Paste
 
+## Command
+
+Command    | Shortcuts       | Actions
+-----------|-----------------| -----------
+quit       | q!              | Quit
+           | qs, sq          | Save and Quit
+           | c!              | Close file
+           | sc              | Save and Close
+           | open            | Open file
+saveas     | sa              | Save As
+replaceall | repall          | Replace all occurence
+setwrap    |                 | Set the Wrapper
+
+
+Save and Quit needs a file in argument if no file is currently open
+Save and Close needs a file in argument if no file is currently open
+Open needs a file in argument
+Save as needs a file in argument
+Replaceall needs two arguments : what you replace followed by the replacement
+SetWrap needs "true" or "false" in argument
 
 Stay tuned for future releases ...
