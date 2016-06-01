@@ -62,6 +62,8 @@ func initModes(g *gocui.Gui) {
 	g.AddMode(cmdMode, openCmdMode, closeCmdMode)
 	g.AddMode(fileMode, openFileMode, closeFileMode)
 	g.AddMode(editMode, openEditMode, closeEditMode)
+
+	g.SetCurrentMode(editMode)
 }
 
 func initKeybindings(g *gocui.Gui) error {
@@ -143,6 +145,18 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// ---------------------- INPUT SECTION --------------------------- //
 
+		// ---------------------- NAVIGATION ------------------------------ //
+
+		{m: fileMode, v: "inputline", k: gocui.KeyHome, h: cursorHome},
+		{m: fileMode, v: "inputline", k: gocui.KeyEnd, h: cursorEnd},
+		{m: fileMode, v: "inputline", k: gocui.KeyArrowLeft, h: moveLeft},
+		{m: fileMode, v: "inputline", k: gocui.KeyArrowRight, h: moveRight},
+
+		{m: editMode, v: "inputline", k: gocui.KeyHome, h: cursorHome},
+		{m: editMode, v: "inputline", k: gocui.KeyEnd, h: cursorEnd},
+		{m: editMode, v: "inputline", k: gocui.KeyArrowLeft, h: moveLeft},
+		{m: editMode, v: "inputline", k: gocui.KeyArrowRight, h: moveRight},
+
 		// ---------------------- USEFUL --- ------------------------------ //
 
 		{m: fileMode, v: "inputline", k: gocui.KeyEnter, h: validateInput},
@@ -169,14 +183,12 @@ func initKeybindings(g *gocui.Gui) error {
 			return err
 		}
 	}
-
-	g.SetCurrentMode(editMode)
-
 	return nil
 }
 
 func breaklineHandler(g *gocui.Gui, v *gocui.View) error {
 	v.EditNewLine()
+	updateInfos(g)
 	return nil
 }
 
@@ -325,6 +337,7 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 	if currentDemonInput == nil {
 		g.SetCurrentView("main")
 		hideInputLine(g)
+		updateInfos(g)
 	}
 
 	// ErrQuit should be the only error not handled
@@ -383,14 +396,14 @@ func doEscapeInput(g *gocui.Gui, v *gocui.View) {
 	currentDemonInput = nil
 	g.SetCurrentView("main")
 	hideInputLine(g)
+	updateInfos(g)
 }
 
 func doSetTopView(g *gocui.Gui, viewname string) error {
 	if err := g.SetCurrentView(viewname); err != nil {
 		return err
-	} else {
-		g.SetViewOnTop(viewname)
 	}
+	g.SetViewOnTop(viewname)
 	return nil
 }
 
@@ -526,6 +539,7 @@ func paste(g *gocui.Gui, v *gocui.View) error {
 			v.EditWrite(rune(r))
 		}
 	}
+	updateInfos(g)
 	return nil
 }
 

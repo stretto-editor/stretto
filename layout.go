@@ -124,7 +124,11 @@ func defaultLayout(g *gocui.Gui) error {
 	}
 
 	info, _ := g.View("infoline")
-	fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0,0")
+	maxX, _ := info.Size()
+	mode := fmt.Sprintf("edit mode")
+	pos := fmt.Sprintf("0:0")
+	fmt.Fprintf(info, "%s", mode)
+	fmt.Fprintf(info, "%[2]*.[2]*[1]s", pos, maxX-len(mode))
 
 	// main on top
 	g.SetViewOnTop("main")
@@ -148,11 +152,12 @@ func hideInputLine(g *gocui.Gui) {
 func displayErrorView(g *gocui.Gui) {
 	v, _ := g.View("error")
 	/*
-		if v.Hidden == true {
-			m, _ := requiredViewsInfo["main"]
-			e, _ := requiredViewsInfo["error"]
-			m.h -= e.h
-		}
+				if v.Hidden == true {
+					m, _ := requiredViewsInfo["main"]
+					e, _ := requiredViewsInfo["error"]
+					m.h -= e.h
+				}
+		<<<<<<< HEAD
 	*/
 	v.Hidden = false
 	g.SetViewOnTop("error")
@@ -172,6 +177,13 @@ func hideErrorView(g *gocui.Gui) {
 }
 
 func layout(g *gocui.Gui) error {
+	// =======
+	// 	v.Editable = true
+	// 	v.Footer = "INFO"
+	// 	info, _ := g.View("infoline")
+	// 	fmt.Fprintf(info, "Currently in edit mode \n"+"Cursor Position : 0:0")
+	// }
+	// >>>>>>> eventManager
 
 	updateAllLayout(g)
 
