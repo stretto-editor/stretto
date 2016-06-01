@@ -28,10 +28,16 @@ func main() {
 	initModes(g)
 
 	g.SetLayout(layout)
+
+	if err := defaultLayout(g); err != nil {
+		log.Fatalln(err)
+	}
+
 	if err := initKeybindings(g); err != nil {
 		log.Fatalln(err)
 	}
 	g.Cursor = true
+	g.SetCurrentMode(editMode)
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		g.Close()
