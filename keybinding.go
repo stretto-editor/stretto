@@ -75,11 +75,11 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// ---------------------- COMMON COMMANDS ------------------------- //
 
-		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
 		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(editMode)},
 		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
-		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: editMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
 		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(fileMode)},
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
@@ -198,7 +198,7 @@ var currentDemonInput demonInput
 
 func interactive(g *gocui.Gui, s string) {
 	g.SetCurrentView("inputline")
-	g.SetViewOnTop("inputline")
+	displayInputLine(g)
 	g.CurrentView().Title = " " + s + " "
 	g.CurrentView().MoveCursor(0, 0, false)
 }
@@ -324,7 +324,7 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 	// (see SearchAndReplace for instance)
 	if currentDemonInput == nil {
 		g.SetCurrentView("main")
-		g.SetViewOnTop("main")
+		hideInputLine(g)
 	}
 
 	// ErrQuit should be the only error not handled
@@ -382,7 +382,7 @@ func doEscapeInput(g *gocui.Gui, v *gocui.View) {
 	v.Clear()
 	currentDemonInput = nil
 	g.SetCurrentView("main")
-	g.SetViewOnTop("main")
+	hideInputLine(g)
 }
 
 func doSetTopView(g *gocui.Gui, viewname string) error {

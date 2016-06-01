@@ -32,7 +32,8 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 		"cmdline": {t: "Commandline",
 			e: true},
 		"inputline": {t: "Inputline for interactive actions",
-			e: true},
+			e:  true,
+			hi: true},
 		"infoline": {e: true,
 			f: "INFO"},
 		"error": {t: "Error :",
@@ -89,6 +90,9 @@ func updateAllLayout(g *gocui.Gui) {
 		i.y -= e.h
 		g.SetViewOnTop("error")
 	}
+	if v, _ := g.View("inputline"); !v.Hidden {
+		g.SetViewOnTop("inputline")
+	}
 }
 
 func defaultLayout(g *gocui.Gui) error {
@@ -127,6 +131,18 @@ func defaultLayout(g *gocui.Gui) error {
 	g.SetCurrentView("main")
 
 	return nil
+}
+
+func displayInputLine(g *gocui.Gui) {
+	v, _ := g.View("inputline")
+	v.Hidden = false
+	g.SetViewOnTop("inputline")
+}
+
+func hideInputLine(g *gocui.Gui) {
+	v, _ := g.View("inputline")
+	v.Hidden = true
+	g.SetViewOnTop("main")
 }
 
 func displayErrorView(g *gocui.Gui) {
