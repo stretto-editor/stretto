@@ -18,6 +18,7 @@ func initGui() *gocui.Gui {
 	initModes(g)
 	defaultLayout(g)
 	layout(g) // ! instead of g.SetLayout(layout)
+	os.Args = []string{"main"}
 	// since we do not enter gui's mainloop in any test
 	initKeybindings(g)
 	return g
@@ -51,8 +52,6 @@ func TestInitMode(t *testing.T) {
 
 func TestDoSwitchMode2(t *testing.T) {
 	var e error
-
-	os.Args = []string{"main"}
 
 	g := initGui()
 	defer g.Close()
@@ -312,6 +311,7 @@ func TestDoSaveAsHandler(t *testing.T) {
 
 	e = validateInput(g, v)
 	assert.Nil(t, e, "There should be no error")
+	os.Remove("a")
 }
 
 func TestDoOpenHandler(t *testing.T) {
@@ -322,8 +322,23 @@ func TestDoOpenHandler(t *testing.T) {
 	v, _ := g.View("inputline")
 	openFileHandler(g, v)
 	v.EditWrite('a')
-
 	validateInput(g, v)
+	closeFileHandler(g, v)
+	v.EditWrite('y')
+	validateInput(g, v)
+
+	currentFile = ""
+	closeFileHandler(g, v)
+	v.EditWrite('y')
+	validateInput(g, v)
+	v.EditWrite('a')
+	validateInput(g, v)
+
+	currentFile = ""
+	closeFileHandler(g, v)
+	v.EditWrite('n')
+	validateInput(g, v)
+	os.Remove("a")
 
 }
 
@@ -345,5 +360,5 @@ func TestDoSaveHandler(t *testing.T) {
 	saveHandler(g, v)
 
 	validateInput(g, v)
-
+	os.Remove("c")
 }

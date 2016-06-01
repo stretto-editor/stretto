@@ -1,9 +1,16 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"github.com/stretto-editor/gocui"
 	"strings"
+
+	"github.com/stretto-editor/gocui"
+)
+
+var (
+	// ErrPatternNotFound raised when the pattern is not found
+	ErrPatternNotFound = errors.New("Unable to find")
 )
 
 func searchHandler(g *gocui.Gui, v *gocui.View) error {
@@ -28,6 +35,17 @@ func search(g *gocui.Gui, input string) error {
 	return fmt.Errorf("Could not find pattern \"%s\" forward", input)
 }
 
+func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
+	moveTo(v, x, y)
+	for i := 0; i < len(oldstring); i++ {
+		v.EditDelete(false)
+	}
+
+	for _, c := range newstring {
+		v.EditWrite(c)
+	}
+}
+
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
@@ -40,20 +58,12 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 			return nil, fmt.Errorf("Could not find pattern \"%s\" forward", input)
 		}
 
-		moveTo(v, xnew, ynew)
-
 		searched := input
 		interactive(g, "Search and replace - Replace string")
+
 		return func(g *gocui.Gui, input string) (demonInput, error) {
 			v, _ := g.View("main")
-
-			for i := 0; i < len(searched); i++ {
-				v.EditDelete(false)
-			}
-
-			for _, c := range input {
-				v.EditWrite(c)
-			}
+			replaceAt(v, xnew, ynew, searched, input)
 			return nil, nil
 		}, nil
 
