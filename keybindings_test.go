@@ -296,3 +296,52 @@ func TestDoPaste(t *testing.T) {
 	paste(g, v)
 	assert.Equal(t, teststring+"\n", v.Buffer(), "Content shoud be the same")
 }
+
+func TestDoSaveAsHandler(t *testing.T) {
+	// possible errors of called functions already tested in test_cmd
+	g := initGui()
+	defer g.Close()
+
+	v, e := g.View("inputline")
+	assert.Nil(t, e, "There should be no error")
+	e = saveAsHandler(g, v)
+	assert.Nil(t, e, "There should be no error")
+	v.EditWrite('a')
+
+	e = validateInput(g, v)
+	assert.Nil(t, e, "There should be no error")
+}
+
+func TestDoOpenHandler(t *testing.T) {
+	// possible errors of called functions already tested in test_cmd
+	g := initGui()
+	defer g.Close()
+
+	v, _ := g.View("inputline")
+	openFileHandler(g, v)
+	v.EditWrite('a')
+
+	validateInput(g, v)
+
+}
+
+func TestDoSaveHandler(t *testing.T) {
+	// possible errors of called functions already tested in test_cmd
+	g := initGui()
+	defer g.Close()
+
+	currentFile = ""
+
+	v, _ := g.View("inputline")
+	saveHandler(g, v)
+	v.EditWrite('c')
+
+	currentFile = "c"
+	v, _ = g.View("main")
+	v.EditWrite('k')
+	v, _ = g.View("inputline")
+	saveHandler(g, v)
+
+	validateInput(g, v)
+
+}
