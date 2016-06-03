@@ -135,6 +135,11 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// CMDLINE
 		{m: cmdMode, v: "cmdline", k: gocui.KeyEnter, h: validateCmd},
+
+		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: historicHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlZ, h: undoHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlY, h: redoHandler},
+		//{m: editMode, v: "main", k: gocui.KeyCtrlD, h: testCmdWrite}, // TODO : deleted this
 	}
 
 	for _, kb := range keyBindings {
@@ -144,6 +149,39 @@ func initKeybindings(g *gocui.Gui) error {
 	}
 	return nil
 }
+
+func historicHandler(g *gocui.Gui, v *gocui.View) error {
+	if v, _ := g.View("historic"); v.Hidden {
+		displayHistoric(g)
+	} else {
+		hideHistoric(g)
+	}
+	return nil
+}
+
+func undoHandler(g *gocui.Gui, v *gocui.View) error {
+	v.Actions.Undo()
+	g.UpdateHistoric()
+	return nil
+}
+
+func redoHandler(g *gocui.Gui, v *gocui.View) error {
+	v.Actions.Redo()
+	g.UpdateHistoric()
+	return nil
+}
+
+/*
+//TODO : deleted this (debug only)
+func testCmdWrite(g *gocui.Gui, v *gocui.View) error {
+	cx, cy := v.Cursor()
+	s := 'T'
+	c := gocui.NewWriteCmd(v, cx, cy, s)
+	v.Actions.Exec(c)
+	g.UpdateHistoric()
+	return nil
+}
+*/
 
 func breaklineHandler(g *gocui.Gui, v *gocui.View) error {
 	v.EditNewLine()

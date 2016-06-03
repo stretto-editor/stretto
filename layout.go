@@ -40,6 +40,9 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 			e:  true,
 			hi: true,
 			wr: true},
+		"historic": {t: "History :",
+			e:  true,
+			hi: true},
 	}
 
 	setDefaultGeometry(g.Size())
@@ -77,6 +80,13 @@ func setDefaultGeometry(maxX, maxY int) {
 	e.h = 3
 	e.x = (maxX - e.w) / 2
 	e.y = maxY - inf.h - e.h - 1
+
+	h, _ := requiredViewsInfo["historic"]
+	h.w = 20
+	h.h = m.h - 10
+	h.x = maxX - h.w - 5
+	h.y = 5
+
 }
 
 func updateAllLayout(g *gocui.Gui) {
@@ -92,6 +102,9 @@ func updateAllLayout(g *gocui.Gui) {
 	}
 	if v, _ := g.View("inputline"); !v.Hidden {
 		g.SetViewOnTop("inputline")
+	}
+	if v, _ := g.View("historic"); !v.Hidden {
+		g.SetViewOnTop("historic")
 	}
 }
 
@@ -135,6 +148,18 @@ func defaultLayout(g *gocui.Gui) error {
 	g.SetCurrentView("main")
 
 	return nil
+}
+
+func displayHistoric(g *gocui.Gui) {
+	v, _ := g.View("historic")
+	v.Hidden = false
+	g.SetViewOnTop("historic")
+}
+
+func hideHistoric(g *gocui.Gui) {
+	v, _ := g.View("historic")
+	v.Hidden = true
+	g.SetViewOnTop("main")
 }
 
 func displayInputLine(g *gocui.Gui) {
