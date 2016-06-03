@@ -15,7 +15,6 @@ func createFile(filename string) {
 		var file *os.File
 		file, _ = os.Create(filename)
 		file.Close()
-		currentFile = filename
 	}
 }
 
@@ -55,7 +54,6 @@ func openAndDisplayFile(g *gocui.Gui, filename string) error {
 	v, _ := g.View("main")
 	err := openFile(v, filename)
 	if err == nil {
-		currentFile = filename
 		v.Title = filename
 		return nil
 	}

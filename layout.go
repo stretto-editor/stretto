@@ -27,7 +27,7 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 		hi         bool   // Hidden
 		wr         bool   // Wrap
 	}{
-		"main": {t: "undefined",
+		"main": {t: "",
 			e: true},
 		"cmdline": {t: "Commandline",
 			e: true},
@@ -120,7 +120,7 @@ func defaultLayout(g *gocui.Gui) error {
 		if err := openFile(v, os.Args[1]); err != nil {
 			return err
 		}
-		currentFile = os.Args[1]
+		v.Title = os.Args[1]
 	}
 
 	info, _ := g.View("infoline")

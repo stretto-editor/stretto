@@ -58,17 +58,16 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 }
 
 func saveAndQuit(g *gocui.Gui, cmd []string) error {
-	if currentFile == "" && len(cmd) == 1 {
+	vMain, _ := g.View("main")
+	if vMain.Title == "" && len(cmd) == 1 {
 		displayError(g, ErrMissingFilename)
 		return nil
 	}
-	vMain, _ := g.View("main")
-	filename := currentFile
-	if filename == "" {
-		filename = cmd[1]
+	if vMain.Title == "" {
+		vMain.Title = cmd[1]
 	}
-	createFile(filename)
-	if err := saveMain(vMain, filename); err != nil {
+	createFile(vMain.Title)
+	if err := saveMain(vMain, vMain.Title); err != nil {
 		return err
 	}
 	return quit(g, vMain)
@@ -88,14 +87,14 @@ func replaceAll(g *gocui.Gui, cmd []string) {
 }
 
 func saveAndClose(g *gocui.Gui, cmd []string) {
-	if currentFile != "" || len(cmd) > 1 {
+	vMain, _ := g.View("main")
+	if vMain.Title != "" || len(cmd) > 1 {
 		vMain, _ := g.View("main")
-		if currentFile == "" {
+		if vMain.Title == "" {
 			createFile(cmd[1])
-			saveMain(vMain, cmd[1])
-		} else {
-			saveMain(vMain, currentFile)
+			vMain.Title = cmd[1]
 		}
+		saveMain(vMain, vMain.Title)
 		closeView(vMain)
 	} else {
 		displayError(g, ErrMissingFilename)

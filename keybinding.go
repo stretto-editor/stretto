@@ -6,8 +6,6 @@ import (
 	"github.com/stretto-editor/gocui"
 )
 
-var currentFile string
-
 // demonInput defines the prototype for functions that
 // should be called later in validateInput
 // A demonInput returns the next demonInput to be called,
@@ -163,12 +161,12 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func saveHandler(g *gocui.Gui, v *gocui.View) error {
-	if currentFile == "" {
+	vMain, _ := g.View("main")
+	if vMain.Title == "" {
 		currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 			createFile(input)
-
-			v, _ := g.View("main")
-			if err := saveMain(v, input); err != nil {
+			vMain.Title = input
+			if err := saveMain(vMain, vMain.Title); err != nil {
 				return nil, err
 			}
 			return nil, nil
@@ -178,8 +176,7 @@ func saveHandler(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	vmain, _ := g.View("main")
-	if err := saveMain(vmain, currentFile); err != nil {
+	if err := saveMain(vMain, vMain.Title); err != nil {
 		return err
 	}
 	return nil
@@ -205,14 +202,14 @@ func quitInfo(g *gocui.Gui, v *gocui.View) error {
 func quitHandler(g *gocui.Gui, v *gocui.View) error {
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		if input != "n" {
-			if currentFile == "" {
+			vMain, _ := g.View("main")
+			if vMain.Title == "" {
 				interactive(g, "File name")
 				return func(g *gocui.Gui, input string) (demonInput, error) {
 
 					createFile(input)
-
-					v, _ := g.View("main")
-					if err := saveMain(v, input); err != nil {
+					vMain.Title = input
+					if err := saveMain(vMain, vMain.Title); err != nil {
 						return nil, err
 					}
 
@@ -220,9 +217,7 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 				}, nil
 
 			}
-
-			v, _ := g.View("main")
-			if err := saveMain(v, currentFile); err != nil {
+			if err := saveMain(vMain, vMain.Title); err != nil {
 				return nil, err
 			}
 		}
@@ -237,18 +232,19 @@ func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		vMain, _ := g.View("main")
 		if input != "n" {
-			if currentFile == "" {
+			if vMain.Title == "" {
 				interactive(g, "File name")
 				return func(g *gocui.Gui, input string) (demonInput, error) {
 					createFile(input)
-					if err := saveMain(vMain, input); err != nil {
+					vMain.Title = input
+					if err := saveMain(vMain, vMain.Title); err != nil {
 						return nil, err
 					}
 					closeView(vMain)
 					return nil, nil
 				}, nil
 			}
-			if err := saveMain(vMain, currentFile); err != nil {
+			if err := saveMain(vMain, vMain.Title); err != nil {
 				return nil, err
 			}
 		}
@@ -262,8 +258,7 @@ func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
 
 func closeView(v *gocui.View) {
 	clearView(v)
-	currentFile = ""
-	v.Title = "undefined"
+	v.Title = ""
 }
 
 func clearView(v *gocui.View) {

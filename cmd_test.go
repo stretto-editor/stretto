@@ -65,8 +65,8 @@ func TestCloseCmd(t *testing.T) {
 	vMain, _ := g.View("main")
 	writeInView(v, "c!")
 	validateCmd(g, v)
-	assert.Equal(t, "undefined", vMain.Title, "Title of the main view should be undefined")
-	assert.Equal(t, "", vMain.Buffer(), "The buffer of the main view should be undefined")
+	assert.Equal(t, "", vMain.Title, "Title of the main view should be empty")
+	assert.Equal(t, "", vMain.Buffer(), "The buffer of the main view should be empty")
 
 	//TODO : add an error when there is an unexpected argument
 }
@@ -135,8 +135,9 @@ func TestQuitAndSaveCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
+	vMain, _ := g.View("main")
 	writeInView(v, "qs")
-	currentFile = "6u8Y73wHm5QWmgRPcXk96y39cL.txt"
+	vMain.Title = "6u8Y73wHm5QWmgRPcXk96y39cL.txt"
 
 }
 
@@ -179,7 +180,7 @@ func TestSaveAndCloseCmd(t *testing.T) {
 	v, _ := g.View("cmdline")
 	vMain, _ := g.View("main")
 	vError, _ := g.View("error")
-	currentFile = ""
+	vMain.Title = ""
 	text := "This is a \n test on two lines"
 	filename := "r9w92W2Cn7MTtAhuCP5si2LH356r8FrjV.txt"
 	//save with no current file
@@ -187,23 +188,23 @@ func TestSaveAndCloseCmd(t *testing.T) {
 	writeInView(v, "sc "+filename)
 	validateCmd(g, v)
 	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content")
-	assert.Equal(t, "", currentFile, "the current file name should be empty")
+	assert.Equal(t, "", vMain.Title, "the current file name should be empty")
 	assert.Equal(t, "", vMain.Buffer(), "the view should be empty")
 
 	//save with a current file
 	clearView(vMain)
-	currentFile = filename
+	vMain.Title = filename
 	text = "I'm trying to save \n and close an opened file"
 	writeInView(vMain, text)
 	writeInView(v, "sc ")
 	validateCmd(g, v)
 	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content")
-	assert.Equal(t, "", currentFile, "the current file name should be empty")
+	assert.Equal(t, "", vMain.Title, "the current file name should be empty")
 	assert.Equal(t, "", vMain.Buffer(), "the view should be empty")
 	os.Remove(filename)
 
 	//try to save without a current file name and without an argument
-	currentFile = ""
+	vMain.Title = ""
 	writeInView(v, "sc")
 	validateCmd(g, v)
 	assert.Contains(t, vError.Buffer(), ErrMissingFilename.Error(), "missing filename error")
@@ -227,7 +228,7 @@ func TestSaveAndQuitCmd(t *testing.T) {
 	os.Remove(filename)
 
 	//try to save without a current file name and without an argument
-	currentFile = ""
+	vMain.Title = ""
 	writeInView(v, "sq")
 	validateCmd(g, v)
 	assert.Contains(t, vError.Buffer(), ErrMissingFilename.Error(), "missing filename error ")

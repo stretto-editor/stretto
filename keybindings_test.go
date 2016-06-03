@@ -223,7 +223,8 @@ func TestDoQuitHandler(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("inputline")
-	currentFile = "unknownfile"
+	vMain, _ := g.View("main")
+	vMain.Title = "unknownfile"
 
 	// espace with an empty input
 	e := quitHandler(g, v)
@@ -232,7 +233,7 @@ func TestDoQuitHandler(t *testing.T) {
 	e = validateInput(g, v)
 	assert.Nil(t, e, "Input shoud be valid")
 
-	currentFile = ""
+	vMain.Title = ""
 
 	e = quitHandler(g, v)
 	assert.Nil(t, e, "No error should be found")
@@ -301,6 +302,7 @@ func TestDoOpenHandler(t *testing.T) {
 	// possible errors of called functions already tested in test_cmd
 	g := initGui()
 	defer g.Close()
+	vMain, _ := g.View("main")
 
 	v, _ := g.View("inputline")
 	openFileHandler(g, v)
@@ -310,14 +312,14 @@ func TestDoOpenHandler(t *testing.T) {
 	v.EditWrite('y')
 	validateInput(g, v)
 
-	currentFile = ""
+	vMain.Title = ""
 	closeFileHandler(g, v)
 	v.EditWrite('y')
 	validateInput(g, v)
 	v.EditWrite('a')
 	validateInput(g, v)
 
-	currentFile = ""
+	vMain.Title = ""
 	closeFileHandler(g, v)
 	v.EditWrite('n')
 	validateInput(g, v)
@@ -329,14 +331,14 @@ func TestDoSaveHandler(t *testing.T) {
 	// possible errors of called functions already tested in test_cmd
 	g := initGui()
 	defer g.Close()
-
-	currentFile = ""
+	vMain, _ := g.View("main")
+	vMain.Title = ""
 
 	v, _ := g.View("inputline")
 	saveHandler(g, v)
 	v.EditWrite('c')
 
-	currentFile = "c"
+	vMain.Title = "c"
 	v, _ = g.View("main")
 	v.EditWrite('k')
 	v, _ = g.View("inputline")
