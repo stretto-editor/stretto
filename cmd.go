@@ -76,11 +76,13 @@ func saveAndQuit(g *gocui.Gui, cmd []string) error {
 func replaceAll(g *gocui.Gui, cmd []string) {
 	if len(cmd) == 3 {
 		vMain, _ := g.View("main")
+		_, yMain := vMain.Size()
 		for found, x, y := searchForward(vMain, cmd[1], 0, 0); found; found, x, y = searchForward(vMain, cmd[1], x, y) {
 			replaceAt(vMain, x, y, cmd[1], cmd[2])
 			if cmd[2] > cmd[1] {
 				x += len(cmd[2]) - len(cmd[1])
 			}
+			y = y % yMain
 		}
 	} else if len(cmd) == 1 {
 		displayError(g, ErrMissingPattern)

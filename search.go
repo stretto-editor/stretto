@@ -115,11 +115,8 @@ func moveTo(v *gocui.View, x int, y int) error {
 	}
 
 	// how many times we move from the size of the window
-	var i int
-	for i = 0; y > ySize; i++ {
-		y -= ySize
-
-	}
+	i := y / ySize
+	y = y % ySize
 	v.SetOrigin(0, yOrigin+i*ySize)
 	v.SetCursor(x, y)
 	return nil
