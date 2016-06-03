@@ -39,7 +39,7 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(fileMode)},
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
-		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(fileMode)},
+		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(editMode)},
 
 		// ---------------------- MAIN SECTION ---------------------------- //
 
@@ -66,7 +66,7 @@ func initKeybindings(g *gocui.Gui) error {
 		// ---------------------- USEFUL --- ------------------------------ //
 
 		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
-		{m: editMode, v: "main", k: 'w', h: closeFileHandler},
+		{m: fileMode, v: "main", k: 'w', h: closeFileHandler},
 		{m: fileMode, v: "main", k: 's', h: saveHandler},
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
