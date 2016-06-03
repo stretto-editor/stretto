@@ -414,6 +414,9 @@ func updateInfos(g *gocui.Gui) error {
 		fmt.Fprintf(info, "%s", mode)
 		fmt.Fprintf(info, "%[2]*.[2]*[1]s", pos, maxX-len(mode))
 	}
+
+	g.CurrentView().Actions.Cut() // TODO : not the best place
+
 	return nil
 }
 
