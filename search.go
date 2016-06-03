@@ -35,17 +35,6 @@ func search(g *gocui.Gui, input string) error {
 	return fmt.Errorf("Could not find pattern \"%s\" forward", input)
 }
 
-func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
-	moveTo(v, x, y)
-	for i := 0; i < len(oldstring); i++ {
-		v.EditDelete(false)
-	}
-
-	for _, c := range newstring {
-		v.EditWrite(c)
-	}
-}
-
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
@@ -71,6 +60,31 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	interactive(g, "Search and replace - Search string")
 	return nil
+}
+
+func replaceAll(g *gocui.Gui, pattern, replacement string) {
+	vMain, _ := g.View("main")
+	_, yMain := vMain.Size()
+	delta := 0
+	if len(replacement) > len(pattern) {
+		delta = len(replacement) - len(pattern)
+	}
+	for found, x, y := searchForward(vMain, pattern, 0, 0); found; found, x, y = searchForward(vMain, pattern, x, y) {
+		replaceAt(vMain, x, y, pattern, replacement)
+		x += delta
+		y = y % yMain
+	}
+}
+
+func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
+	moveTo(v, x, y)
+	for i := 0; i < len(oldstring); i++ {
+		v.EditDelete(false)
+	}
+
+	for _, c := range newstring {
+		v.EditWrite(c)
+	}
 }
 
 // func gives how to move from the current origin

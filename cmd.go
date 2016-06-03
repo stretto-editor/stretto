@@ -21,7 +21,7 @@ var (
 )
 
 func validateCmd(g *gocui.Gui, v *gocui.View) error {
-	var e error
+	var err error
 	if v.Name() != "cmdline" {
 		panic("Cmdline is not the current view")
 	}
@@ -33,35 +33,40 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 	cmd := strings.Fields(cmdBuff)
 	switch cmd[0] {
 	case "quit", "q!":
-		e = quit(g, v)
+		err = quit(g, v)
 	case "qs", "sq":
-		e = saveAndQuit(g, cmd)
+		err = saveAndQuit(g, cmd)
 	case "c!":
 		vMain, _ := g.View("main")
 		closeView(vMain)
 	case "sc":
-		saveAndClose(g, cmd)
+		err = saveAndClose(g, cmd)
 	case "o", "open":
-		openCmd(g, cmd)
+		err = openCmd(g, cmd)
 	case "saveas", "sa":
-		saveAsCmd(g, cmd)
+		err = saveAsCmd(g, cmd)
 	case "replaceall", "repall":
-		replaceAll(g, cmd)
+		err = replaceAllCmd(g, cmd)
 	case "setwrap":
-		setWrapCmd(g, cmd)
+		err = setWrapCmd(g, cmd)
 	//TODO: go to the line specified
 	default:
-		displayError(g, ErrUnknownCommand)
+		err = ErrUnknownCommand
 	}
 	clearView(v)
-	return e
+	if err == gocui.ErrQuit {
+		return err
+	}
+	if err != nil {
+		displayError(g, err)
+	}
+	return nil
 }
 
 func saveAndQuit(g *gocui.Gui, cmd []string) error {
 	vMain, _ := g.View("main")
 	if vMain.Title == "" && len(cmd) == 1 {
-		displayError(g, ErrMissingFilename)
-		return nil
+		return ErrMissingFilename
 	}
 	if vMain.Title == "" {
 		vMain.Title = cmd[1]
@@ -73,25 +78,18 @@ func saveAndQuit(g *gocui.Gui, cmd []string) error {
 	return quit(g, vMain)
 }
 
-func replaceAll(g *gocui.Gui, cmd []string) {
+func replaceAllCmd(g *gocui.Gui, cmd []string) error {
 	if len(cmd) == 3 {
-		vMain, _ := g.View("main")
-		_, yMain := vMain.Size()
-		for found, x, y := searchForward(vMain, cmd[1], 0, 0); found; found, x, y = searchForward(vMain, cmd[1], x, y) {
-			replaceAt(vMain, x, y, cmd[1], cmd[2])
-			if cmd[2] > cmd[1] {
-				x += len(cmd[2]) - len(cmd[1])
-			}
-			y = y % yMain
-		}
-	} else if len(cmd) == 1 {
-		displayError(g, ErrMissingPattern)
-	} else {
-		displayError(g, ErrUnexpectedArgument)
+		replaceAll(g, cmd[1], cmd[2])
+		return nil
 	}
+	if len(cmd) == 1 {
+		return ErrMissingPattern
+	}
+	return ErrUnexpectedArgument
 }
 
-func saveAndClose(g *gocui.Gui, cmd []string) {
+func saveAndClose(g *gocui.Gui, cmd []string) error {
 	vMain, _ := g.View("main")
 	if vMain.Title != "" || len(cmd) > 1 {
 		vMain, _ := g.View("main")
@@ -101,32 +99,34 @@ func saveAndClose(g *gocui.Gui, cmd []string) {
 		}
 		saveMain(vMain, vMain.Title)
 		closeView(vMain)
-	} else {
-		displayError(g, ErrMissingFilename)
+		return nil
 	}
+	return ErrMissingFilename
 }
 
-func openCmd(g *gocui.Gui, cmd []string) {
+func openCmd(g *gocui.Gui, cmd []string) error {
 	if len(cmd) == 2 {
 		openAndDisplayFile(g, cmd[1])
-	} else if len(cmd) == 1 {
-		displayError(g, ErrMissingFilename)
-	} else {
-		displayError(g, ErrUnexpectedArgument)
+		return nil
 	}
+	if len(cmd) == 1 {
+		return ErrMissingFilename
+	}
+	return ErrUnexpectedArgument
 }
 
-func saveAsCmd(g *gocui.Gui, cmd []string) {
+func saveAsCmd(g *gocui.Gui, cmd []string) error {
 	if len(cmd) == 2 {
 		saveAs(g, cmd[1])
-	} else if len(cmd) == 1 {
-		displayError(g, ErrMissingFilename)
-	} else {
-		displayError(g, ErrUnexpectedArgument)
+		return nil
 	}
+	if len(cmd) == 1 {
+		return ErrMissingFilename
+	}
+	return ErrUnexpectedArgument
 }
 
-func setWrapCmd(g *gocui.Gui, cmd []string) {
+func setWrapCmd(g *gocui.Gui, cmd []string) error {
 	if len(cmd) == 2 {
 		vMain, _ := g.View("main")
 		if cmd[1] == "true" {
@@ -134,9 +134,10 @@ func setWrapCmd(g *gocui.Gui, cmd []string) {
 		} else if cmd[1] == "false" {
 			vMain.Wrap = false
 		}
-	} else if len(cmd) == 1 {
-		displayError(g, ErrWrapArgument)
-	} else {
-		displayError(g, ErrUnexpectedArgument)
+		return nil
 	}
+	if len(cmd) == 1 {
+		return ErrWrapArgument
+	}
+	return ErrUnexpectedArgument
 }
