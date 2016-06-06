@@ -12,6 +12,7 @@ func cursorHome(g *gocui.Gui, v *gocui.View) error {
 		v.SetCursor(0, cy)
 	}
 	updateInfos(g)
+	g.CurrentView().Actions.Cut()
 	return nil
 }
 
@@ -29,6 +30,7 @@ func cursorEnd(g *gocui.Gui, v *gocui.View) error {
 		}
 	}
 	updateInfos(g)
+	g.CurrentView().Actions.Cut()
 	return nil
 }
 
@@ -53,6 +55,7 @@ func goPgUp(g *gocui.Gui, v *gocui.View) error {
 		}
 	}
 	updateInfos(g)
+	g.CurrentView().Actions.Cut()
 	return nil
 }
 
@@ -74,6 +77,7 @@ func goPgDown(g *gocui.Gui, v *gocui.View) error {
 		}
 	}
 	updateInfos(g)
+	g.CurrentView().Actions.Cut()
 	return nil
 }
 
@@ -103,6 +107,7 @@ func scrollUp(g *gocui.Gui, v *gocui.View) error {
 		v.SetOrigin(0, oy-1)
 	}
 	updateInfos(g)
+	g.CurrentView().Actions.Cut()
 	return nil
 }
 
@@ -111,10 +116,12 @@ func scrollDown(g *gocui.Gui, v *gocui.View) error {
 	// allowed infinite scroll
 	v.SetOrigin(0, oy+1)
 	updateInfos(g)
+	g.CurrentView().Actions.Cut()
 	return nil
 }
 
 func moveAndInfo(g *gocui.Gui, v *gocui.View, x int, y int, b bool) {
 	v.MoveCursor(x, y, b)
 	updateInfos(g)
+	g.CurrentView().Actions.Cut()
 }
