@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
 
 	"github.com/stretto-editor/gocui"
 )
@@ -74,6 +77,8 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
 		{m: fileMode, v: "main", k: 'b', h: docHandler},
+		{m: fileMode, v: "main", k: 'm', h: dirInfoHandler},
+		//{m: fileMode, v: "dirinfo", k: gocui.KeyEsc, h: quitDirInfo},
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: historicHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlZ, h: undoHandler},
@@ -263,6 +268,53 @@ func quitInfo(g *gocui.Gui, v *gocui.View) error {
 	g.SetCurrentView(g.Workingview().Name())
 	g.SetViewOnTop(g.Workingview().Name())
 	g.DeleteView("cmdinfo")
+	return nil
+}
+
+func dirInfoHandler(g *gocui.Gui, v *gocui.View) error {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+		return nil, showDirectory(g, input)
+	}
+	interactive(g, "Directory Content")
+	return nil
+}
+
+func showDirectory(g *gocui.Gui, directory string) error {
+	if directory[len(directory)-1] != '/' {
+		s := []string{}
+		s = append(s, directory)
+		s = append(s, "/")
+		directory = strings.Join(s, "")
+	}
+	if v, err := createDirView(g, "Directory Info"); err != nil {
+		displayError(g, err)
+	} else {
+		g.SetCurrentView("main")
+		v = g.CurrentView()
+		files, err := ioutil.ReadDir(directory)
+		if err != nil {
+			return fmt.Errorf("%s is not a valid directory", directory)
+		}
+		displayDirectoryContent(v, files)
+		g.SetViewOnTop(v.Name())
+	}
+
+	return nil
+}
+
+func displayDirectoryContent(v *gocui.View, files []os.FileInfo) {
+	for _, file := range files {
+		if file.IsDir() {
+			fmt.Fprintln(v, " "+file.Name()+"/")
+		} else if !file.IsDir() {
+			fmt.Fprintln(v, " "+file.Name())
+		}
+	}
+}
+
+func quitDirInfo(g *gocui.Gui, v *gocui.View) error {
+	g.DeleteView("Directory Info")
+	removeFileView("Directory Info")
 	return nil
 }
 

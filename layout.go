@@ -296,3 +296,23 @@ func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 func removeFileView(viewName string) {
 	delete(requiredViewsInfo, viewName)
 }
+
+func createDirView(g *gocui.Gui, name string) (*gocui.View, error) {
+	v, err := g.SetView(name, "", 0, 0, 100, 300)
+	updateGeom := func(maxX, maxY int) {
+		f, _ := requiredViewsInfo[name]
+		f.w = 30
+		f.h = maxY * 60 / 100
+		f.x = 5
+		f.y = 3
+	}
+	requiredViewsInfo[name] = &viewInfo{
+		t:  name,
+		c:  "",
+		e:  false,
+		wr: true,
+		up: updateGeom,
+	}
+	initView(g, name)
+	return v, err
+}
