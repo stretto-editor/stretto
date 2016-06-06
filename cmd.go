@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/stretto-editor/gocui"
 )
@@ -20,46 +19,31 @@ var (
 	ErrWrapArgument = errors.New("expected true or false argument")
 )
 
-func validateCmd(g *gocui.Gui, v *gocui.View) error {
-	var err error
-	if v.Name() != "cmdline" {
-		panic("Cmdline is not the current view")
-	}
-	cmdBuff := v.Buffer()
-	if cmdBuff == "" {
-		return nil
-	}
-	cmdBuff = cmdBuff[:len(cmdBuff)-1]
-	cmd := strings.Fields(cmdBuff)
-	switch cmd[0] {
-	case "quit", "q!":
-		err = quit(g, v)
-	case "qs", "sq":
-		err = saveAndQuit(g, cmd)
-	case "c!":
-		vMain, _ := g.View("main")
-		closeView(vMain)
-	case "sc":
-		err = saveAndClose(g, cmd)
-	case "o", "open":
-		err = openCmd(g, cmd)
-	case "saveas", "sa":
-		err = saveAsCmd(g, cmd)
-	case "replaceall", "repall":
-		err = replaceAllCmd(g, cmd)
-	case "setwrap":
-		err = setWrapCmd(g, cmd)
+func initCommands() {
+	commands = make(map[string]*Command)
+	commands["quit"] = &Command{"quit", quitCmd, 0, 0, nil, nil}
+	commands["q!"] = commands["quit"]
+	commands["sq"] = &Command{"sq", saveAndQuit, 0, 1, ErrMissingFilename, GetAutocompleteFile}
+	commands["qs"] = commands["sq"]
+	commands["saveas"] = &Command{"saveas", saveAsCmd, 1, 1, ErrMissingFilename, GetAutocompleteFile}
+	commands["sa"] = commands["saveas"]
+	commands["setwrap"] = &Command{"setwrap", setWrapCmd, 1, 1, ErrWrapArgument, GetAutocompleteBoolean}
+	commands["open"] = &Command{"open", openCmd, 1, 1, ErrMissingFilename, GetAutocompleteFile}
+	commands["o"] = commands["open"]
+	commands["close"] = &Command{"close", closeCmd, 0, 0, nil, nil}
+	commands["c!"] = commands["close"]
+	commands["replaceall"] = &Command{"replaceall", replaceAllCmd, 2, 2, ErrMissingPattern, nil}
+	commands["repall"] = commands["replaceall"]
 	//TODO: go to the line specified
-	default:
-		err = ErrUnknownCommand
-	}
-	clearView(v)
-	if err == gocui.ErrQuit {
-		return err
-	}
-	if err != nil {
-		displayError(g, err)
-	}
+}
+
+func quitCmd(g *gocui.Gui, cmd []string) error {
+	return gocui.ErrQuit
+}
+
+func closeCmd(g *gocui.Gui, cmd []string) error {
+	vMain, _ := g.View("main")
+	closeView(vMain)
 	return nil
 }
 
@@ -79,14 +63,8 @@ func saveAndQuit(g *gocui.Gui, cmd []string) error {
 }
 
 func replaceAllCmd(g *gocui.Gui, cmd []string) error {
-	if len(cmd) == 3 {
-		replaceAll(g, cmd[1], cmd[2])
-		return nil
-	}
-	if len(cmd) == 1 {
-		return ErrMissingPattern
-	}
-	return ErrUnexpectedArgument
+	replaceAll(g, cmd[1], cmd[2])
+	return nil
 }
 
 func saveAndClose(g *gocui.Gui, cmd []string) error {
@@ -105,39 +83,21 @@ func saveAndClose(g *gocui.Gui, cmd []string) error {
 }
 
 func openCmd(g *gocui.Gui, cmd []string) error {
-	if len(cmd) == 2 {
-		openAndDisplayFile(g, cmd[1])
-		return nil
-	}
-	if len(cmd) == 1 {
-		return ErrMissingFilename
-	}
-	return ErrUnexpectedArgument
+	openAndDisplayFile(g, cmd[1])
+	return nil
 }
 
 func saveAsCmd(g *gocui.Gui, cmd []string) error {
-	if len(cmd) == 2 {
-		saveAs(g, cmd[1])
-		return nil
-	}
-	if len(cmd) == 1 {
-		return ErrMissingFilename
-	}
-	return ErrUnexpectedArgument
+	saveAs(g, cmd[1])
+	return nil
 }
 
 func setWrapCmd(g *gocui.Gui, cmd []string) error {
-	if len(cmd) == 2 {
-		vMain, _ := g.View("main")
-		if cmd[1] == "true" {
-			vMain.Wrap = true
-		} else if cmd[1] == "false" {
-			vMain.Wrap = false
-		}
-		return nil
+	vMain, _ := g.View("main")
+	if cmd[1] == "true" {
+		vMain.Wrap = true
+	} else if cmd[1] == "false" {
+		vMain.Wrap = false
 	}
-	if len(cmd) == 1 {
-		return ErrWrapArgument
-	}
-	return ErrUnexpectedArgument
+	return nil
 }

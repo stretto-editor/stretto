@@ -30,11 +30,11 @@ func initKeybindings(g *gocui.Gui) error {
 		// ---------------------- COMMON COMMANDS ------------------------- //
 
 		{m: fileMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
-		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(editMode)},
+		{m: fileMode, v: "", k: 'i', h: switchModeHandlerFactory(editMode)},
 		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
-		{m: editMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
-		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(fileMode)},
+		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: editMode, v: "", k: gocui.KeyEsc, h: switchModeHandlerFactory(fileMode)},
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
 		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(editMode)},
@@ -133,6 +133,7 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// CMDLINE
 		{m: cmdMode, v: "cmdline", k: gocui.KeyEnter, h: validateCmd},
+		{m: cmdMode, v: "cmdline", k: gocui.KeyTab, h: AutocompleteCmd},
 	}
 
 	for _, kb := range keyBindings {
