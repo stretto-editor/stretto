@@ -29,8 +29,8 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 		hi         bool   // Hidden
 		wr         bool   // Wrap
 	}{
-		"main": {t: "",
-			c: "file",
+		"file": {t: "",
+			c: "main",
 			e: true},
 		"cmdline": {t: "Commandline",
 			c: "editable",
@@ -52,17 +52,17 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 
 func initTreeView(g *gocui.Gui) {
 	g.SetViewNode("editable", "", 0, 0, 10, 10)
-	g.SetViewNode("file", "editable", 0, 0, 10, 10)
+	g.SetViewNode("main", "editable", 0, 0, 10, 10)
 }
 
 func setDefaultGeometry(maxX, maxY int) {
 	infoHeight := 2
 	// default geometry
-	m, _ := requiredViewsInfo["main"]
-	m.w = maxX + 1
-	m.h = maxY - 1 - infoHeight
-	m.x = -1
-	m.y = 0
+	f, _ := requiredViewsInfo["file"]
+	f.w = maxX + 1
+	f.h = maxY - 1 - infoHeight
+	f.x = -1
+	f.y = 0
 
 	c, _ := requiredViewsInfo["cmdline"]
 	c.w = 30
@@ -93,7 +93,7 @@ func updateAllLayout(g *gocui.Gui) {
 	setDefaultGeometry(g.Size())
 
 	if v, _ := g.View("error"); !v.Hidden {
-		m, _ := requiredViewsInfo["main"]
+		m, _ := requiredViewsInfo["file"]
 		i, _ := requiredViewsInfo["inputline"]
 		e, _ := requiredViewsInfo["error"]
 		m.h -= e.h
@@ -126,7 +126,8 @@ func defaultLayout(g *gocui.Gui) error {
 
 	// check if there is a second argument
 	if len(os.Args) >= 2 {
-		v, _ := g.View("main")
+		v, _ := g.View("file")
+		// v := g.Workingview()
 		v.Title = os.Args[1]
 		if err := openFile(v, os.Args[1]); err != nil {
 			return err
@@ -142,8 +143,9 @@ func defaultLayout(g *gocui.Gui) error {
 	fmt.Fprintf(info, "%[2]*.[2]*[1]s", pos, maxX-len(mode))
 
 	// main on top
-	g.SetViewOnTop("main")
-	g.SetCurrentView("main")
+	g.SetViewOnTop("file")
+	g.SetCurrentView("file")
+	g.SetWorkingView("file")
 
 	return nil
 }
@@ -157,7 +159,8 @@ func displayInputLine(g *gocui.Gui) {
 func hideInputLine(g *gocui.Gui) {
 	v, _ := g.View("inputline")
 	v.Hidden = true
-	g.SetViewOnTop("main")
+	// g.SetViewOnTop("main")
+	g.SetViewOnTop(g.Workingview().Name())
 }
 
 func displayErrorView(g *gocui.Gui) {
@@ -169,7 +172,8 @@ func displayErrorView(g *gocui.Gui) {
 func hideErrorView(g *gocui.Gui) {
 	v, _ := g.View("error")
 	v.Hidden = true
-	g.SetViewOnTop("main")
+	// g.SetViewOnTop("main")
+	g.SetViewOnTop(g.Workingview().Name())
 }
 
 func layout(g *gocui.Gui) error {

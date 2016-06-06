@@ -68,7 +68,8 @@ func TestDoSwitchMode2(t *testing.T) {
 
 	e = doSwitchMode(g, "file")
 	assert.NoError(t, e)
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Equal(t, v, g.CurrentView(), "current view should be main")
 	if assert.NotNil(t, g.CurrentView()) {
 		assert.Equal(t, g.CurrentView().Editable, false, "current view should not be editable")
@@ -76,7 +77,8 @@ func TestDoSwitchMode2(t *testing.T) {
 
 	e = doSwitchMode(g, "edit")
 	assert.NoError(t, e)
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Equal(t, g.CurrentView(), v, "current view should be main")
 	if assert.NotNil(t, g.CurrentView()) {
 		assert.Equal(t, g.CurrentView().Editable, true, "current view should be editable")
@@ -137,7 +139,8 @@ func TestValidateInput(t *testing.T) {
 
 	// unauthorized calls :
 	// 1 not from the inputline
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Panics(t, func() { validateInput(g, v) }, "Inputline is not the current view")
 
 	// 2 no function to use the input
@@ -160,13 +163,15 @@ func TestDoEscapeInput(t *testing.T) {
 	currentDemonInput = emptyDemon
 	v, _ = g.View("inputline")
 	doEscapeInput(g, v)
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Equal(t, g.CurrentView(), v, "current view should be the main view")
 	assert.Nil(t, currentDemonInput, "there should not be any demon waiting")
 
 	// unauthorized calls :
 	// 1 not from the inputline
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Panics(t, func() { doEscapeInput(g, v) }, "Inputline is not the current view")
 
 	// 2 no function to use the input
@@ -179,7 +184,7 @@ func TestDoCursorInfo(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 
-	g.SetCurrentView("main")
+	// g.SetCurrentView("main")
 	g.CurrentView().SetCursor(4, 5)
 	inMainView, _, _ := cursorInfo(g)
 	//rx, ry := g.CurrentView().Cursor()
@@ -223,7 +228,8 @@ func TestDoQuitHandler(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("inputline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vMain.Title = "unknownfile"
 
 	// espace with an empty input
@@ -271,7 +277,8 @@ func TestDoPaste(t *testing.T) {
 	}
 
 	g := initGui()
-	v, _ := g.View("main")
+	// v, _ := g.View("main")
+	v := g.Workingview()
 	defer g.Close()
 	teststring := "testinput"
 
@@ -302,7 +309,8 @@ func TestDoOpenHandler(t *testing.T) {
 	// possible errors of called functions already tested in test_cmd
 	g := initGui()
 	defer g.Close()
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 
 	v, _ := g.View("inputline")
 	openFileHandler(g, v)
@@ -331,7 +339,8 @@ func TestDoSaveHandler(t *testing.T) {
 	// possible errors of called functions already tested in test_cmd
 	g := initGui()
 	defer g.Close()
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vMain.Title = ""
 
 	v, _ := g.View("inputline")
@@ -339,7 +348,8 @@ func TestDoSaveHandler(t *testing.T) {
 	v.EditWrite('c')
 
 	vMain.Title = "c"
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	v.EditWrite('k')
 	v, _ = g.View("inputline")
 	saveHandler(g, v)

@@ -14,7 +14,8 @@ func TestValidateCmd(t *testing.T) {
 	defer g.Close()
 
 	// unauthorized calls : not from the cmdline
-	v, _ := g.View("main")
+	// v, _ := g.View("main")
+	v := g.Workingview()
 	assert.Panics(t, func() { validateCmd(g, v) }, "Cmdline is not the current view")
 }
 
@@ -39,7 +40,7 @@ func TestOpenCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	//vMain, _ := g.View("main")
 	vError, _ := g.View("error")
 	filename := "Commands.md"
 	writeInView(v, "o "+filename)
@@ -47,6 +48,7 @@ func TestOpenCmd(t *testing.T) {
 	f, err := os.Open(filename)
 	assert.Nil(t, err, err)
 	content, _ := ioutil.ReadAll(f)
+	vMain := g.Workingview()
 	assert.Equal(t, string(content)+"\n", vMain.Buffer(), "vMain should contains the content of "+filename)
 
 	v.EditWrite('o')
@@ -62,7 +64,8 @@ func TestCloseCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	writeInView(v, "c!")
 	validateCmd(g, v)
 	assert.Equal(t, "", vMain.Title, "Title of the main view should be empty")
@@ -102,7 +105,8 @@ func TestSetWrapCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
 
 	writeInView(v, "setwrap true")
@@ -135,7 +139,8 @@ func TestQuitAndSaveCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	writeInView(v, "qs")
 	vMain.Title = "6u8Y73wHm5QWmgRPcXk96y39cL.txt"
 
@@ -145,7 +150,8 @@ func TestSaveAsCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
 	text := "This is a \n test on two lines"
 	filename := "r9w92W2Cn7MTtAhuCP5si2LH356r8FrjV.txt"
@@ -178,7 +184,8 @@ func TestSaveAndCloseCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
 	vMain.Title = ""
 	text := "This is a \n test on two lines"
@@ -214,7 +221,8 @@ func TestSaveAndQuitCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
 
 	text := "This is a \n test on two lines"

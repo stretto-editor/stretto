@@ -37,7 +37,8 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 	case "qs", "sq":
 		err = saveAndQuit(g, cmd)
 	case "c!":
-		vMain, _ := g.View("main")
+		// vMain, _ := g.View("main")
+		vMain := g.Workingview()
 		closeView(vMain)
 	case "sc":
 		err = saveAndClose(g, cmd)
@@ -64,7 +65,8 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 }
 
 func saveAndQuit(g *gocui.Gui, cmd []string) error {
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	if vMain.Title == "" && len(cmd) == 1 {
 		return ErrMissingFilename
 	}
@@ -90,9 +92,9 @@ func replaceAllCmd(g *gocui.Gui, cmd []string) error {
 }
 
 func saveAndClose(g *gocui.Gui, cmd []string) error {
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	if vMain.Title != "" || len(cmd) > 1 {
-		vMain, _ := g.View("main")
 		if vMain.Title == "" {
 			createFile(cmd[1])
 			vMain.Title = cmd[1]
@@ -128,7 +130,8 @@ func saveAsCmd(g *gocui.Gui, cmd []string) error {
 
 func setWrapCmd(g *gocui.Gui, cmd []string) error {
 	if len(cmd) == 2 {
-		vMain, _ := g.View("main")
+		//vMain, _ := g.View("main")
+		vMain := g.Workingview()
 		if cmd[1] == "true" {
 			vMain.Wrap = true
 		} else if cmd[1] == "false" {

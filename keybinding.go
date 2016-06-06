@@ -29,11 +29,11 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// ---------------------- COMMON COMMANDS ------------------------- //
 
-		{m: fileMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
 		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(editMode)},
 		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
-		{m: editMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
 		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(fileMode)},
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
@@ -161,7 +161,8 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func saveHandler(g *gocui.Gui, v *gocui.View) error {
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	if vMain.Title == "" {
 		currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 			createFile(input)
@@ -193,8 +194,8 @@ func docHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func quitInfo(g *gocui.Gui, v *gocui.View) error {
-	g.SetCurrentView("main")
-	g.SetViewOnTop("main")
+	g.SetCurrentView(g.Workingview().Name())
+	g.SetViewOnTop(g.Workingview().Name())
 	g.DeleteView("cmdinfo")
 	return nil
 }
@@ -202,7 +203,8 @@ func quitInfo(g *gocui.Gui, v *gocui.View) error {
 func quitHandler(g *gocui.Gui, v *gocui.View) error {
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
 		if input != "n" {
-			vMain, _ := g.View("main")
+			// vMain, _ := g.View("main")
+			vMain := g.Workingview()
 			if vMain.Title == "" {
 				interactive(g, "File name")
 				return func(g *gocui.Gui, input string) (demonInput, error) {
@@ -230,7 +232,8 @@ func quitHandler(g *gocui.Gui, v *gocui.View) error {
 
 func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		vMain, _ := g.View("main")
+		// vMain, _ := g.View("main")
+		vMain := g.Workingview()
 		if input != "n" {
 			if vMain.Title == "" {
 				interactive(g, "File name")
@@ -293,7 +296,7 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 	// we are expecting some input
 	// (see SearchAndReplace for instance)
 	if currentDemonInput == nil {
-		g.SetCurrentView("main")
+		g.SetCurrentView(g.Workingview().Name())
 		hideInputLine(g)
 		updateInfos(g)
 	}
@@ -334,7 +337,7 @@ func doEscapeInput(g *gocui.Gui, v *gocui.View) {
 	v.SetCursor(0, 0)
 	v.Clear()
 	currentDemonInput = nil
-	g.SetCurrentView("main")
+	g.SetCurrentView(g.Workingview().Name())
 	hideInputLine(g)
 	updateInfos(g)
 }
@@ -379,7 +382,7 @@ func updateInfos(g *gocui.Gui) error {
 
 func cursorInfo(g *gocui.Gui) (bool, int, int) {
 	v := g.CurrentView()
-	if v.Name() == "main" {
+	if v.Name() == g.Workingview().Name() {
 		x, y := v.Cursor()
 		x1, y1 := v.Origin()
 		return true, x + x1, y + y1
