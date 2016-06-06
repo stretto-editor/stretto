@@ -20,6 +20,8 @@ type viewInfo struct {
 	hi         bool       // Hidden
 	wr         bool       // Wrap
 	up         updateView // update
+	hl         bool       // highlight
+	slbgcol    gocui.Attribute
 }
 
 var requiredViewsInfo map[string]*viewInfo
@@ -142,6 +144,8 @@ func initView(g *gocui.Gui, vname string) (*gocui.View, error) {
 	v.Footer = settings.f
 	v.Hidden = settings.hi
 	v.Wrap = settings.wr
+	v.Highlight = settings.hl
+	v.SelBgColor = settings.slbgcol
 	return v, nil
 }
 
@@ -263,10 +267,13 @@ func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 		f.y = 0
 	}
 	requiredViewsInfo[filename] = &viewInfo{
-		t:  "",
-		c:  "main",
-		e:  true,
-		up: updateFileGeom,
+		t:       "",
+		c:       "main",
+		e:       true,
+		up:      updateFileGeom,
+		wr:      userconfig.Wrap,
+		hl:      userconfig.Highlight,
+		slbgcol: setColor(userconfig.Selbgcolor),
 	}
 	updateFileGeom(g.Size())
 	initView(g, filename)

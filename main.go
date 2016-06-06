@@ -40,6 +40,8 @@ func main() {
 	g.Cursor = true
 	g.SetCurrentMode(editMode)
 
+	initConfig(g)
+
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		g.Close()
 		log.Fatalln(err)

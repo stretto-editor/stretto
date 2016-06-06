@@ -1,0 +1,11 @@
+{
+  "wrap" : true,
+  "cursor" : true,
+  "guibgcolor" : "black",
+  "guifgcolor" : "white",
+  "viewbgcolor" : "black",
+  "viewfgcolor" : "white",
+  "selbgcolor" : "blue",
+  "selfgcolor" : "white",
+  "highlight" : true
+}
