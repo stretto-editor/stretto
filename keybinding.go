@@ -9,7 +9,7 @@ import (
 // demonInput defines the prototype for functions that
 // should be called later in validateInput
 // A demonInput returns the next demonInput to be called,
-// or nil if there is noone
+// or nil if there is none
 type demonInput func(g *gocui.Gui, input string) (demonInput, error)
 
 // current is the next demonInput to be called

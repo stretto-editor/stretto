@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/stretto-editor/gocui"
 )
@@ -17,6 +18,12 @@ var (
 	ErrUnexpectedArgument = errors.New("unexpected argument")
 	// ErrWrapArgument raised when the true or false argument is missing in the wrap command
 	ErrWrapArgument = errors.New("expected true or false argument")
+	// ErrMissingLine raised when the number of the line to go to is missing
+	ErrMissingLine = errors.New("the number of the line to go to is missing")
+	// ErrGoToInWrapMode raised when the user try to use goto when wrap mode is active
+	ErrGoToInWrapMode = errors.New("goto not available when wrap is active")
+	// ErrNumberExpected raised when a number is expected in argument and other type was found
+	ErrNumberExpected = errors.New("illegal parameter, number expected")
 )
 
 func initCommands() {
@@ -34,7 +41,7 @@ func initCommands() {
 	commands["c!"] = commands["close"]
 	commands["replaceall"] = &Command{"replaceall", replaceAllCmd, 2, 2, ErrMissingPattern, nil}
 	commands["repall"] = commands["replaceall"]
-	//TODO: go to the line specified
+	commands["goto"] = &Command{"goto", goToCmd, 1, 2, ErrMissingLine, nil}
 }
 
 func quitCmd(g *gocui.Gui, cmd []string) error {
@@ -99,5 +106,38 @@ func setWrapCmd(g *gocui.Gui, cmd []string) error {
 	} else if cmd[1] == "false" {
 		vMain.Wrap = false
 	}
+	return nil
+}
+
+func goToCmd(g *gocui.Gui, cmd []string) error {
+	vMain, _ := g.View("main")
+	if vMain.Wrap {
+		return ErrGoToInWrapMode
+	}
+	var x, y int
+	var err error
+	if y, err = strconv.Atoi(cmd[1]); err != nil {
+		return ErrNumberExpected
+	}
+	if len(cmd) > 2 {
+		if x, err = strconv.Atoi(cmd[2]); err != nil {
+			return ErrNumberExpected
+		}
+	}
+	vMain.SetOrigin(0, 0)
+	vMain.SetCursor(0, 0)
+	_, cy := vMain.Cursor()
+	cyPred := -1
+	_, oy := vMain.Origin()
+	oyPred := -1
+	for cy+oy != cyPred+oyPred && oy+cy != y {
+		_, cyPred = vMain.Cursor()
+		_, oyPred = vMain.Origin()
+		moveDown(g, vMain)
+		_, cy = vMain.Cursor()
+		_, oy = vMain.Origin()
+	}
+	vMain.MoveCursor(x, 0, false)
+	switchModeHandlerFactory(editMode)(g, vMain)
 	return nil
 }
