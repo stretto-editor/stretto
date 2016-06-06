@@ -10,17 +10,19 @@ import (
 
 var requiredViewsInfo map[string]*struct {
 	x, y, w, h int
-	t          string
-	e          bool
-	f          string
-	hi         bool
-	wr         bool
+	c          string // father container
+	t          string // Title
+	e          bool   // Editable
+	f          string // Footer
+	hi         bool   // Hidden
+	wr         bool   // Wrap
 }
 
 func initRequiredViewsInfo(g *gocui.Gui) {
 
 	requiredViewsInfo = map[string]*struct {
 		x, y, w, h int
+		c          string // father container
 		t          string // Title
 		e          bool   // Editable
 		f          string // Footer
@@ -28,10 +30,13 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 		wr         bool   // Wrap
 	}{
 		"main": {t: "",
+			c: "file",
 			e: true},
 		"cmdline": {t: "Commandline",
+			c: "editable",
 			e: true},
 		"inputline": {t: "Inputline for interactive actions",
+			c:  "editable",
 			e:  true,
 			hi: true},
 		"infoline": {e: true,
@@ -43,6 +48,11 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 	}
 
 	setDefaultGeometry(g.Size())
+}
+
+func initTreeView(g *gocui.Gui) {
+	g.SetViewNode("editable", "", 0, 0, 10, 10)
+	g.SetViewNode("file", "editable", 0, 0, 10, 10)
 }
 
 func setDefaultGeometry(maxX, maxY int) {
@@ -99,10 +109,11 @@ func defaultLayout(g *gocui.Gui) error {
 	var v *gocui.View
 	var err error
 
+	initTreeView(g)
 	initRequiredViewsInfo(g)
 
 	for vname, settings := range requiredViewsInfo {
-		v, err = g.SetView(vname, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h)
+		v, err = g.SetView(vname, settings.c, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h)
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -165,7 +176,7 @@ func layout(g *gocui.Gui) error {
 	updateAllLayout(g)
 
 	for vname, settings := range requiredViewsInfo {
-		if _, err := g.SetView(vname, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h); err != nil {
+		if _, err := g.SetView(vname, settings.c, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h); err != nil {
 			if err != gocui.ErrUnknownView {
 				return err
 			}
@@ -209,7 +220,7 @@ func createDocView(g *gocui.Gui) (*gocui.View, error) {
 	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY/2 - hcmd/2
 	var v *gocui.View
 	var err error
-	if v, err = g.SetView("cmdinfo", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil && err == gocui.ErrUnknownView {
+	if v, err = g.SetView("cmdinfo", "", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil && err == gocui.ErrUnknownView {
 		v.Editable = false
 		v.Wrap = true
 		v.Title = "Commands Summary"
