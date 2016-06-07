@@ -126,15 +126,19 @@ func writeAutocomplete(v *gocui.View, prefix, word string) {
 
 // GetAutocompleteCmd returns the command beginning by the prefix in argument
 func GetAutocompleteCmd(prefix string, posArg int) string {
-	count := 0
+	firstWord := true
 	output := ""
 	for cmd := range commands {
+		//if the current command begin with the prefix and the current
+		//command is not a shortcut from another word for the command
 		if strings.HasPrefix(cmd, prefix) && cmd == commands[cmd].name {
-			count++
-			if count > 1 {
+			//if this is not the first command which can complete the prefix,
+			// it intersects the currentcommand and the previous prediction
+			if !firstWord {
 				output = intersectionString(output, cmd)
 			} else {
 				output = cmd
+				firstWord = false
 			}
 		}
 	}
@@ -144,6 +148,7 @@ func GetAutocompleteCmd(prefix string, posArg int) string {
 // GetAutocompleteFile returns the file beginning by the prefix in argument
 func GetAutocompleteFile(prefix string, posArg int) string {
 	currentdir := "."
+	// if the filepath contains a directory
 	if index := strings.LastIndex(prefix, "/"); index != -1 {
 		currentdir = prefix[:index+1]
 	}
@@ -152,22 +157,29 @@ func GetAutocompleteFile(prefix string, posArg int) string {
 		return ""
 	}
 	output := ""
-	count := 0
+	firstWord := true
 	isDir := true
+	//used for the currentfilepath after
 	if currentdir == "." {
 		currentdir = ""
 	}
+	currentFilePath := ""
 	for _, file := range files {
-		if strings.HasPrefix(currentdir+file.Name(), prefix) {
-			count++
-			if count > 1 {
-				output = intersectionString(output, currentdir+file.Name())
+		currentFilePath = currentdir + file.Name()
+		if strings.HasPrefix(currentFilePath, prefix) {
+			//if this is not the first command which can complete the prefix,
+			// it intersects the currentcommand and the previous prediction
+			if !firstWord {
+				output = intersectionString(output, currentFilePath)
+				// if there is an intersection, the current prediction can't be a directory anymore
 				isDir = false
 			} else {
-				output = currentdir + file.Name()
+				output = currentFilePath
+				firstWord = false
 			}
 		}
 	}
+	//if the autocompleted word is a directory, add a "/" to the completion
 	if isDir {
 		f, err := os.Open(output)
 		if err != nil {
