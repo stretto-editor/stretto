@@ -223,7 +223,7 @@ func TestSaveAndQuitCmd(t *testing.T) {
 	writeInView(vMain, text)
 	writeInView(v, "sq "+filename)
 	err := validateCmd(g, v)
-	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content")
+	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content ")
 	assert.EqualError(t, err, gocui.ErrQuit.Error(), "Errquit should be returned from validatecmd when sq is executed")
 	os.Remove(filename)
 

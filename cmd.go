@@ -39,6 +39,7 @@ func initCommands() {
 	commands["o"] = commands["open"]
 	commands["close"] = &Command{"close", closeCmd, 0, 0, nil, nil}
 	commands["c!"] = commands["close"]
+	commands["sc"] = &Command{"sc", saveAndClose, 0, 1, nil, GetAutocompleteFile}
 	commands["replaceall"] = &Command{"replaceall", replaceAllCmd, 2, 2, ErrMissingPattern, nil}
 	commands["repall"] = commands["replaceall"]
 	commands["goto"] = &Command{"goto", goToCmd, 1, 2, ErrMissingLine, nil}
