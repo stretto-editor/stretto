@@ -9,7 +9,7 @@ import (
 // demonInput defines the prototype for functions that
 // should be called later in validateInput
 // A demonInput returns the next demonInput to be called,
-// or nil if there is noone
+// or nil if there is none
 type demonInput func(g *gocui.Gui, input string) (demonInput, error)
 
 // current is the next demonInput to be called
@@ -30,11 +30,11 @@ func initKeybindings(g *gocui.Gui) error {
 		// ---------------------- COMMON COMMANDS ------------------------- //
 
 		{m: fileMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
-		{m: fileMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(editMode)},
+		{m: fileMode, v: "", k: gocui.KeyF2, h: switchModeHandlerFactory(editMode)},
 		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
-		{m: editMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
-		{m: editMode, v: "", k: gocui.KeyTab, h: switchModeHandlerFactory(fileMode)},
+		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: editMode, v: "", k: gocui.KeyF2, h: switchModeHandlerFactory(fileMode)},
 		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
 
 		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(editMode)},
@@ -69,6 +69,11 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
 		{m: fileMode, v: "main", k: 'b', h: docHandler},
+
+		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: historicHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlZ, h: undoHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlY, h: redoHandler},
+		//{m: editMode, v: "main", k: gocui.KeyCtrlD, h: testCmdWrite}, // TODO : deleted this
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlW, h: closeFileHandler},
@@ -135,11 +140,7 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// CMDLINE
 		{m: cmdMode, v: "cmdline", k: gocui.KeyEnter, h: validateCmd},
-
-		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: historicHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlZ, h: undoHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlY, h: redoHandler},
-		//{m: editMode, v: "main", k: gocui.KeyCtrlD, h: testCmdWrite}, // TODO : deleted this
+		{m: cmdMode, v: "cmdline", k: gocui.KeyTab, h: AutocompleteCmd},
 	}
 
 	for _, kb := range keyBindings {

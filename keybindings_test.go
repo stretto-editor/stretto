@@ -22,6 +22,7 @@ func initGui() *gocui.Gui {
 	os.Args = []string{"main"}
 	// since we do not enter gui's mainloop in any test
 	initKeybindings(g)
+	initCommands()
 	return g
 }
 
