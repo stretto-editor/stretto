@@ -459,15 +459,11 @@ func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func permutLinesUpHandler(g *gocui.Gui, v *gocui.View) error {
-	if err := v.PermutLines(true); err != nil {
-		displayError(g, err)
-	}
+	v.EditPermutLines(true)
 	return nil
 }
 
 func permutLinesDownHandler(g *gocui.Gui, v *gocui.View) error {
-	if err := v.PermutLines(false); err != nil {
-		displayError(g, err)
-	}
+	v.EditPermutLines(false)
 	return nil
 }

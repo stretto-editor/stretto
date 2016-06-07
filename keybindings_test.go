@@ -37,7 +37,6 @@ func TestPermutLines(t *testing.T) {
 	permutLinesDownHandler(g, v)
 	assert.Equal(t, "bar\nfoo\n", v.Buffer())
 
-	v.SetCursor(1, 1)
 	permutLinesUpHandler(g, v)
 	assert.Equal(t, "foo\nbar\n", v.Buffer())
 }
