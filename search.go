@@ -24,7 +24,8 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func search(g *gocui.Gui, input string) error {
-	v, _ := g.View("main")
+	// v, _ := g.View("main")
+	v := g.Workingview()
 	x, y := v.Cursor()
 
 	if found, newx, newy := searchForward(v, input, x, y); found == true {
@@ -38,7 +39,8 @@ func search(g *gocui.Gui, input string) error {
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		v, _ := g.View("main")
+		// v, _ := g.View("main")
+		v := g.Workingview()
 		x, y := v.Cursor()
 		var xnew, ynew int
 		var found bool
@@ -51,7 +53,8 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 		interactive(g, "Search and replace - Replace string")
 
 		return func(g *gocui.Gui, input string) (demonInput, error) {
-			v, _ := g.View("main")
+			// v, _ := g.View("main")
+			v := g.Workingview()
 			replaceAt(v, xnew, ynew, searched, input)
 			return nil, nil
 		}, nil
@@ -63,7 +66,8 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func replaceAll(g *gocui.Gui, pattern, replacement string) {
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	_, yMain := vMain.Size()
 	delta := 0
 	if len(replacement) > len(pattern) {
