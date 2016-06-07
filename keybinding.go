@@ -80,6 +80,8 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copyHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: pasteHandler},
 		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlJ, h: permutLinesUpHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlK, h: permutLinesDownHandler},
 
 		// ---------------------- INFO SECTION ---------------------------- //
 
@@ -415,5 +417,19 @@ func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
 		return nil, saveAs(g, filename)
 	}
 	interactive(g, "Save as")
+	return nil
+}
+
+func permutLinesUpHandler(g *gocui.Gui, v *gocui.View) error {
+	if err := v.PermutLines(true); err != nil {
+		displayError(g, err)
+	}
+	return nil
+}
+
+func permutLinesDownHandler(g *gocui.Gui, v *gocui.View) error {
+	if err := v.PermutLines(false); err != nil {
+		displayError(g, err)
+	}
 	return nil
 }

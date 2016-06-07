@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -22,6 +23,23 @@ func initGui() *gocui.Gui {
 	// since we do not enter gui's mainloop in any test
 	initKeybindings(g)
 	return g
+}
+
+func TestPermutLines(t *testing.T) {
+	g := initGui()
+	defer g.Close()
+
+	v := g.CurrentView()
+	fmt.Fprint(v, "foo\nbar")
+	v.SetOrigin(0, 0)
+	v.SetCursor(1, 0)
+
+	permutLinesDownHandler(g, v)
+	assert.Equal(t, "bar\nfoo\n", v.Buffer())
+
+	v.SetCursor(1, 1)
+	permutLinesUpHandler(g, v)
+	assert.Equal(t, "foo\nbar\n", v.Buffer())
 }
 
 func TestInitMode(t *testing.T) {
