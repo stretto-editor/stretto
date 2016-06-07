@@ -27,13 +27,6 @@ var requiredViewsInfo map[string]*viewInfo
 var infoHeight = 2
 
 func initRequiredViewsInfo(g *gocui.Gui) {
-	updateFileGeom := func(maxX, maxY int) {
-		f, _ := requiredViewsInfo["file"]
-		f.w = maxX + 1
-		f.h = maxY - 1 - infoHeight
-		f.x = -1
-		f.y = 0
-	}
 	updateCmdlineGeom := func(maxX, maxY int) {
 		c, _ := requiredViewsInfo["cmdline"]
 		c.w = 30
@@ -64,12 +57,6 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 	}
 
 	requiredViewsInfo = map[string]*viewInfo{
-		"file": {
-			t:  "",
-			c:  "main",
-			e:  true,
-			up: updateFileGeom,
-		},
 		"cmdline": {
 			t:  "Commandline",
 			c:  "editable",
@@ -151,13 +138,9 @@ func defaultLayout(g *gocui.Gui) error {
 
 	// check if there is a second argument
 	if len(os.Args) >= 2 {
-		v, _ := g.View("file")
-		// v := g.Workingview()
-		v.Title = os.Args[1]
-		if err := openFile(v, os.Args[1]); err != nil {
-			return err
-		}
-		v.Title = os.Args[1]
+		openAndDisplayFile(g, os.Args[1])
+	} else {
+		newFileView(g, "file")
 	}
 
 	info, _ := g.View("infoline")
