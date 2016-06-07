@@ -61,6 +61,11 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: editMode, v: "main", k: gocui.KeyPgup, h: goPgUp},
 		{m: editMode, v: "main", k: gocui.KeyPgdn, h: goPgDown},
 
+		{m: editMode, v: "main", k: gocui.KeyF7, h: switchBufferForward},
+		{m: fileMode, v: "main", k: gocui.KeyF7, h: switchBufferForward},
+		{m: editMode, v: "main", k: gocui.KeyF8, h: switchBufferBackward},
+		{m: fileMode, v: "main", k: gocui.KeyF8, h: switchBufferBackward},
+
 		// ---------------------- USEFUL --- ------------------------------ //
 
 		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
@@ -139,6 +144,26 @@ func initKeybindings(g *gocui.Gui) error {
 		if err := g.SetKeybinding(kb.m, kb.v, kb.k, gocui.ModNone, kb.h); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func switchBufferForward(g *gocui.Gui, v *gocui.View) error {
+	c, _ := g.ViewNode("main")
+	newView := c.RoundRobinForward()
+	if newView != nil {
+		g.SetCurrentView(newView.Name())
+		g.SetWorkingView(newView.Name())
+	}
+	return nil
+}
+
+func switchBufferBackward(g *gocui.Gui, v *gocui.View) error {
+	c, _ := g.ViewNode("main")
+	newView := c.RoundRobinBackward()
+	if newView != nil {
+		g.SetCurrentView(newView.Name())
+		g.SetWorkingView(newView.Name())
 	}
 	return nil
 }
@@ -243,7 +268,7 @@ func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
 					if err := saveMain(vMain, vMain.Title); err != nil {
 						return nil, err
 					}
-					closeView(vMain)
+					closeView(g, vMain)
 					return nil, nil
 				}, nil
 			}
@@ -251,7 +276,7 @@ func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
 				return nil, err
 			}
 		}
-		closeView(vMain)
+		closeView(g, vMain)
 		return nil, nil
 	}
 
@@ -259,9 +284,19 @@ func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func closeView(v *gocui.View) {
-	clearView(v)
-	v.Title = ""
+func closeView(g *gocui.Gui, v *gocui.View) {
+	//clearView(v)
+	//v.Title = ""
+	g.DeleteView(g.Workingview().Name())
+	removeFileView(g.Workingview().Name())
+	c, _ := g.ViewNode("main")
+	activeView := c.LastView()
+	if activeView == nil {
+		activeView, _ = newFileView(g, "file")
+	}
+	g.SetWorkingView(activeView.Name())
+	g.SetCurrentView(activeView.Name())
+	g.SetViewOnTop(activeView.Name())
 }
 
 func clearView(v *gocui.View) {
@@ -300,6 +335,7 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 		hideInputLine(g)
 		updateInfos(g)
 	}
+	g.SetViewOnTop(g.Workingview().Name())
 
 	// ErrQuit should be the only error not handled
 	if err != gocui.ErrQuit {

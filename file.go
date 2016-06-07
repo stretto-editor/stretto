@@ -51,11 +51,10 @@ func saveMain(v *gocui.View, filename string) error {
 }
 
 func openAndDisplayFile(g *gocui.Gui, filename string) error {
-	//v, _ := g.View("main")
-	v, _ := g.SetView("file12", "main", 0, 0, 10, 30)
+	v, _ := newFileView(g, filename)
 	g.SetWorkingView(v.Name())
 	g.SetCurrentView(v.Name())
-	g.SetViewOnTop(v.Name())
+	// g.SetViewOnTop(v.Name())
 	err := openFile(v, filename)
 	if err == nil {
 		v.Title = filename

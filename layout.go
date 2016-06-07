@@ -127,23 +127,26 @@ func updateAllLayout(g *gocui.Gui) {
 	}
 }
 
-func defaultLayout(g *gocui.Gui) error {
-	var v *gocui.View
-	var err error
+func initView(g *gocui.Gui, vname string) (*gocui.View, error) {
+	settings := requiredViewsInfo[vname]
+	v, err := g.SetView(vname, settings.c, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h)
+	if err != gocui.ErrUnknownView {
+		return nil, err
+	}
+	v.Editable = settings.e
+	v.Title = settings.t
+	v.Footer = settings.f
+	v.Hidden = settings.hi
+	v.Wrap = settings.wr
+	return v, nil
+}
 
+func defaultLayout(g *gocui.Gui) error {
 	initTreeView(g)
 	initRequiredViewsInfo(g)
 
-	for vname, settings := range requiredViewsInfo {
-		v, err = g.SetView(vname, settings.c, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h)
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Editable = settings.e
-		v.Title = settings.t
-		v.Footer = settings.f
-		v.Hidden = settings.hi
-		v.Wrap = settings.wr
+	for vname := range requiredViewsInfo {
+		initView(g, vname)
 	}
 
 	// check if there is a second argument
@@ -165,10 +168,13 @@ func defaultLayout(g *gocui.Gui) error {
 	fmt.Fprintf(info, "%[2]*.[2]*[1]s", pos, maxX-len(mode))
 
 	// main on top
-	g.SetViewOnTop("file")
-	g.SetCurrentView("file")
-	g.SetWorkingView("file")
-
+	c, _ := g.ViewNode("main")
+	v := c.LastView()
+	if v != nil {
+		g.SetViewOnTop(v.Name())
+		g.SetCurrentView(v.Name())
+		g.SetWorkingView(v.Name())
+	}
 	return nil
 }
 
@@ -254,4 +260,27 @@ func createDocView(g *gocui.Gui) (*gocui.View, error) {
 	}
 	return nil, err
 
+}
+
+func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
+	v, err := g.SetView(filename, "main", 0, 0, 100, 300)
+	updateFileGeom := func(maxX, maxY int) {
+		f, _ := requiredViewsInfo[filename]
+		f.w = maxX + 1
+		f.h = maxY - 1 - infoHeight
+		f.x = -1
+		f.y = 0
+	}
+	requiredViewsInfo[filename] = &viewInfo{
+		t:  filename,
+		c:  "main",
+		e:  true,
+		up: updateFileGeom,
+	}
+	initView(g, filename)
+	return v, err
+}
+
+func removeFileView(viewName string) {
+	delete(requiredViewsInfo, viewName)
 }

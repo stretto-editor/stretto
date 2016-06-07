@@ -39,7 +39,7 @@ func validateCmd(g *gocui.Gui, v *gocui.View) error {
 	case "c!":
 		// vMain, _ := g.View("main")
 		vMain := g.Workingview()
-		closeView(vMain)
+		closeView(g, vMain)
 	case "sc":
 		err = saveAndClose(g, cmd)
 	case "o", "open":
@@ -100,7 +100,7 @@ func saveAndClose(g *gocui.Gui, cmd []string) error {
 			vMain.Title = cmd[1]
 		}
 		saveMain(vMain, vMain.Title)
-		closeView(vMain)
+		closeView(g, vMain)
 		return nil
 	}
 	return ErrMissingFilename
