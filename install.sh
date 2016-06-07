@@ -9,23 +9,30 @@ elif [ "$OSTYPE" == "win32" ]; then
 elif [ "$OSTYPE" == "darwin" ]; then
   echo "Darwin installation not supported"
 elif [ "$OSTYPE" == "linux-gnu" ]; then
-  echo "Linux installation :"
+  echo "> Linux installation :"
 
-  if [ -d  "$GOPATH" ]; then
-    export PATH=$PATH:$GOPATH/bin > $HOME/.bashrc
-    . $HOME/.bashrc
+  mkdir /tmp/strettotemp
+  cd /tmp/strettotemp
+  mkdir usr
 
-    cd $GOPATH
-    go get github.com/stretto-editor/stretto
-    cd $GOPATH/src/github.com/stretto-editor/stretto
-    go install
-    echo "-> Installation completed"
-    echo "-> You can now run Stretto with "stretto" command"
+  wget https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz
+  tar -C ./usr -xzf go1.6.2.linux-amd64.tar.gz
 
-  else
+  export PATH=$PATH:/tmp/strettotemp/usr/go/bin
+  export GOPATH=/tmp/strettotemp/strettoinstall
 
-    echo "Could not complete installation :"
-    echo "-> GOPATH not set"
+  mkdir strettoinstall
 
-  fi
+  echo "--> Application will now be installed"
+  cd $GOPATH
+  go get github.com/stretto-editor/stretto
+  cd $GOPATH/src/github.com/stretto-editor/stretto
+  go install
+  mv $GOPATH/bin/stretto $HOME
+  cd $HOME
+  rm -rf /tmp/strettotemp
+  echo "----> Installation of Stretto completed"
+  echo "-----> Stretto application is now in $HOME"
+
+
 fi
