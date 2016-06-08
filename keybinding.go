@@ -286,11 +286,9 @@ func showDirectory(g *gocui.Gui, directory string) error {
 		s = append(s, "/")
 		directory = strings.Join(s, "")
 	}
-	if v, err := createDirView(g, "Directory Info"); err != nil {
+	if v, err := createView(g, "Directory Info"); err != gocui.ErrUnknownView {
 		displayError(g, err)
 	} else {
-		g.SetCurrentView("main")
-		v = g.CurrentView()
 		files, err := ioutil.ReadDir(directory)
 		if err != nil {
 			return fmt.Errorf("%s is not a valid directory", directory)
@@ -311,7 +309,6 @@ func displayDirectoryContent(v *gocui.View, files []os.FileInfo) {
 		}
 	}
 }
-
 func quitDirInfo(g *gocui.Gui, v *gocui.View) error {
 	g.DeleteView("Directory Info")
 	removeFileView("Directory Info")
@@ -428,7 +425,7 @@ func validateInput(g *gocui.Gui, v *gocui.View) error {
 		hideInputLine(g)
 		updateInfos(g)
 	}
-	g.SetViewOnTop(g.Workingview().Name())
+	//g.SetViewOnTop(g.Workingview().Name())
 
 	// ErrQuit should be the only error not handled
 	if err != gocui.ErrQuit {
