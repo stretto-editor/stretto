@@ -101,6 +101,7 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 }
 
 func initTreeView(g *gocui.Gui) {
+	g.SetViewNode("tmp", "", 0, 0, 10, 10)
 	g.SetViewNode("editable", "", 0, 0, 10, 10)
 	g.SetViewNode("main", "editable", 0, 0, 10, 10)
 }
@@ -115,7 +116,7 @@ func updateAllLayout(g *gocui.Gui) {
 	updateGeometry(g.Size())
 
 	if v, _ := g.View("error"); !v.Hidden {
-		m, _ := requiredViewsInfo["file"]
+		m, _ := requiredViewsInfo[g.Workingview().Name()]
 		i, _ := requiredViewsInfo["inputline"]
 		e, _ := requiredViewsInfo["error"]
 		m.h -= e.h
@@ -133,7 +134,7 @@ func updateAllLayout(g *gocui.Gui) {
 func initView(g *gocui.Gui, vname string) (*gocui.View, error) {
 	settings := requiredViewsInfo[vname]
 	v, err := g.SetView(vname, settings.c, settings.x, settings.y, settings.x+settings.w, settings.y+settings.h)
-	if err != gocui.ErrUnknownView {
+	if err != gocui.ErrUnknownView && err != nil {
 		return nil, err
 	}
 	v.Editable = settings.e
@@ -186,8 +187,6 @@ func displayHistoric(g *gocui.Gui) {
 func hideHistoric(g *gocui.Gui) {
 	v, _ := g.View("historic")
 	v.Hidden = true
-	g.SetViewOnTop("main")
-	g.SetViewOnTop(g.Workingview().Name())
 }
 
 func displayInputLine(g *gocui.Gui) {
@@ -199,8 +198,6 @@ func displayInputLine(g *gocui.Gui) {
 func hideInputLine(g *gocui.Gui) {
 	v, _ := g.View("inputline")
 	v.Hidden = true
-	// g.SetViewOnTop("main")
-	g.SetViewOnTop(g.Workingview().Name())
 }
 
 func displayErrorView(g *gocui.Gui) {
@@ -212,8 +209,6 @@ func displayErrorView(g *gocui.Gui) {
 func hideErrorView(g *gocui.Gui) {
 	v, _ := g.View("error")
 	v.Hidden = true
-	// g.SetViewOnTop("main")
-	g.SetViewOnTop(g.Workingview().Name())
 }
 
 func layout(g *gocui.Gui) error {
@@ -258,22 +253,6 @@ func displayDoc(g *gocui.Gui) {
 	}
 }
 
-func createDocView(g *gocui.Gui) (*gocui.View, error) {
-	maxX, maxY := g.Size()
-	wcmd, hcmd := maxX*70/100, maxY*70/100
-	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY/2 - hcmd/2
-	var v *gocui.View
-	var err error
-	if v, err = g.SetView("cmdinfo", "", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil && err == gocui.ErrUnknownView {
-		v.Editable = false
-		v.Wrap = true
-		v.Title = "Commands Summary"
-		return v, nil
-	}
-	return nil, err
-
-}
-
 func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 	v, err := g.SetView(filename, "main", 0, 0, 100, 300)
 	updateFileGeom := func(maxX, maxY int) {
@@ -284,15 +263,37 @@ func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 		f.y = 0
 	}
 	requiredViewsInfo[filename] = &viewInfo{
-		t:  filename,
+		t:  "",
 		c:  "main",
 		e:  true,
 		up: updateFileGeom,
 	}
+	updateFileGeom(g.Size())
 	initView(g, filename)
 	return v, err
 }
 
-func removeFileView(viewName string) {
+func removeInfoView(viewName string) {
 	delete(requiredViewsInfo, viewName)
+}
+
+func newTmpView(g *gocui.Gui, name string) (*gocui.View, error) {
+	v, err := g.SetView(name, "tmp", 0, 0, 100, 300)
+	updateGeom := func(maxX, maxY int) {
+		f, _ := requiredViewsInfo[name]
+		f.w = maxX * 50 / 100
+		f.h = maxY * 80 / 100
+		f.x = 5
+		f.y = 3
+	}
+	requiredViewsInfo[name] = &viewInfo{
+		t:  name,
+		c:  "tmp",
+		e:  false,
+		wr: true,
+		up: updateGeom,
+	}
+	updateGeom(g.Size())
+	initView(g, name)
+	return v, err
 }

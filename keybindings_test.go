@@ -234,7 +234,7 @@ func TestDoInfoView(t *testing.T) {
 	assert.Equal(t, v, v2, "The view should be command info")
 	assert.Nil(t, e)
 
-	e = quitInfo(g, v)
+	e = quitTmpView(g, v)
 	assert.Nil(t, e)
 
 	_, e = g.View("cmdinfo")
