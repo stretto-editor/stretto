@@ -53,7 +53,9 @@ func saveMain(v *gocui.View, filename string) error {
 func openAndDisplayFile(g *gocui.Gui, filename string) error {
 	v, _ := newFileView(g, filename)
 	g.SetWorkingView(v.Name())
-	g.SetCurrentView(v.Name())
+	if g.CurrentMode().Name() != cmdMode {
+		g.SetCurrentView(v.Name())
+	}
 	// g.SetViewOnTop(v.Name())
 	err := openFile(v, filename)
 	if err == nil {
