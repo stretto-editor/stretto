@@ -84,8 +84,8 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 'm', h: dirInfoHandler},
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: historicHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlZ, h: undoHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlY, h: redoHandler},
+		{m: editMode, v: "", k: gocui.KeyCtrlZ, h: undoHandler},
+		{m: editMode, v: "", k: gocui.KeyCtrlY, h: redoHandler},
 		//{m: editMode, v: "main", k: gocui.KeyCtrlD, h: testCmdWrite}, // TODO : deleted this
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
