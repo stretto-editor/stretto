@@ -140,6 +140,7 @@ func goToCmd(g *gocui.Gui, cmd []string) error {
 		_, oy = vMain.Origin()
 	}
 	vMain.MoveCursor(x, 0, false)
+	vMain.Actions.Cut()
 	switchModeHandlerFactory(editMode)(g, vMain)
 	return nil
 }
