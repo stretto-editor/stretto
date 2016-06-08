@@ -24,12 +24,12 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func search(g *gocui.Gui, input string) error {
-	// v, _ := g.View("main")
 	v := g.Workingview()
-	x, y := v.Cursor()
 
-	if found, newx, newy := searchForward(v, input, x, y); found == true {
-		moveTo(v, newx, newy)
+	if found, x, y := v.SearchForward(input); found == true {
+		v.SetCursor(0, 0)
+		v.SetOrigin(0, 0)
+		v.MoveCursor(x, y, false)
 		return nil
 	}
 
@@ -39,13 +39,12 @@ func search(g *gocui.Gui, input string) error {
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		// v, _ := g.View("main")
+
 		v := g.Workingview()
-		x, y := v.Cursor()
-		var xnew, ynew int
+		var x, y int
 		var found bool
 
-		if found, xnew, ynew = searchForward(v, input, x, y); !found {
+		if found, x, y = v.SearchForward(input); !found {
 			return nil, fmt.Errorf("Could not find pattern \"%s\" forward", input)
 		}
 
@@ -53,9 +52,8 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 		interactive(g, "Search and replace - Replace string")
 
 		return func(g *gocui.Gui, input string) (demonInput, error) {
-			// v, _ := g.View("main")
 			v := g.Workingview()
-			replaceAt(v, xnew, ynew, searched, input)
+			replaceAt(v, x, y, searched, input)
 			return nil, nil
 		}, nil
 
@@ -66,26 +64,22 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func replaceAll(g *gocui.Gui, pattern, replacement string) {
-	// vMain, _ := g.View("main")
-	vMain := g.Workingview()
-	_, yMain := vMain.Size()
-	delta := 0
-	if len(replacement) > len(pattern) {
-		delta = len(replacement) - len(pattern)
-	}
-	for found, x, y := searchForward(vMain, pattern, 0, 0); found; found, x, y = searchForward(vMain, pattern, x, y) {
-		replaceAt(vMain, x, y, pattern, replacement)
-		x += delta
-		y = y % yMain
+	v := g.Workingview()
+
+	found, x, y := v.SearchForward(pattern)
+	for found {
+		replaceAt(v, x, y, pattern, replacement)
+		found, x, y = v.SearchForward(pattern)
 	}
 }
 
 func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
-	moveTo(v, x, y)
+	v.SetCursor(0, 0)
+	v.SetOrigin(0, 0)
+	v.MoveCursor(x, y, false)
 	for i := 0; i < len(oldstring); i++ {
 		v.EditDelete(false)
 	}
-
 	for _, c := range newstring {
 		v.EditWrite(c)
 	}
