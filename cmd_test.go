@@ -14,7 +14,6 @@ func TestValidateCmd(t *testing.T) {
 	defer g.Close()
 
 	// unauthorized calls : not from the cmdline
-	// v, _ := g.View("main")
 	v := g.Workingview()
 	assert.Panics(t, func() { validateCmd(g, v) }, "Cmdline is not the current view")
 }
