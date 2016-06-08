@@ -22,6 +22,7 @@ type viewInfo struct {
 	up         updateView // update
 	hl         bool       // highlight
 	slbgcol    gocui.Attribute
+	slfgcol    gocui.Attribute
 }
 
 var requiredViewsInfo map[string]*viewInfo
@@ -146,6 +147,7 @@ func initView(g *gocui.Gui, vname string) (*gocui.View, error) {
 	v.Wrap = settings.wr
 	v.Highlight = settings.hl
 	v.SelBgColor = settings.slbgcol
+	v.SelFgColor = settings.slfgcol
 	return v, nil
 }
 
@@ -274,6 +276,7 @@ func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 		wr:      userconfig.Wrap,
 		hl:      userconfig.Highlight,
 		slbgcol: setColor(userconfig.Selbgcolor),
+		slfgcol: setColor(userconfig.Selfgcolor),
 	}
 	updateFileGeom(g.Size())
 	initView(g, filename)
