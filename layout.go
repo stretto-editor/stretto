@@ -101,6 +101,7 @@ func initRequiredViewsInfo(g *gocui.Gui) {
 }
 
 func initTreeView(g *gocui.Gui) {
+	g.SetViewNode("tmp", "", 0, 0, 10, 10)
 	g.SetViewNode("editable", "", 0, 0, 10, 10)
 	g.SetViewNode("main", "editable", 0, 0, 10, 10)
 }
@@ -252,22 +253,6 @@ func displayDoc(g *gocui.Gui) {
 	}
 }
 
-func createDocView(g *gocui.Gui) (*gocui.View, error) {
-	maxX, maxY := g.Size()
-	wcmd, hcmd := maxX*70/100, maxY*70/100
-	var xcmd, ycmd int = (maxX - wcmd) / 2, maxY/2 - hcmd/2
-	var v *gocui.View
-	var err error
-	if v, err = g.SetView("cmdinfo", "", xcmd, ycmd, xcmd+wcmd, ycmd+hcmd); err != nil && err == gocui.ErrUnknownView {
-		v.Editable = false
-		v.Wrap = true
-		v.Title = "Commands Summary"
-		return v, nil
-	}
-	return nil, err
-
-}
-
 func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 	v, err := g.SetView(filename, "main", 0, 0, 100, 300)
 	updateFileGeom := func(maxX, maxY int) {
@@ -278,7 +263,7 @@ func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 		f.y = 0
 	}
 	requiredViewsInfo[filename] = &viewInfo{
-		t:  filename,
+		t:  "",
 		c:  "main",
 		e:  true,
 		up: updateFileGeom,
@@ -288,26 +273,27 @@ func newFileView(g *gocui.Gui, filename string) (*gocui.View, error) {
 	return v, err
 }
 
-func removeFileView(viewName string) {
+func removeInfoView(viewName string) {
 	delete(requiredViewsInfo, viewName)
 }
 
-func createView(g *gocui.Gui, name string) (*gocui.View, error) {
-	v, err := g.SetView(name, "", 0, 0, 100, 300)
+func newTmpView(g *gocui.Gui, name string) (*gocui.View, error) {
+	v, err := g.SetView(name, "tmp", 0, 0, 100, 300)
 	updateGeom := func(maxX, maxY int) {
 		f, _ := requiredViewsInfo[name]
-		f.w = 30
-		f.h = maxY * 60 / 100
+		f.w = maxX * 50 / 100
+		f.h = maxY * 80 / 100
 		f.x = 5
 		f.y = 3
 	}
 	requiredViewsInfo[name] = &viewInfo{
 		t:  name,
-		c:  "",
+		c:  "tmp",
 		e:  false,
 		wr: true,
 		up: updateGeom,
 	}
+	updateGeom(g.Size())
 	initView(g, name)
 	return v, err
 }
