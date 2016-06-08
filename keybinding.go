@@ -386,8 +386,10 @@ func closeView(g *gocui.Gui, v *gocui.View) {
 		activeView, _ = newFileView(g, "file")
 	}
 	g.SetWorkingView(activeView.Name())
-	g.SetCurrentView(activeView.Name())
-	g.SetViewOnTop(activeView.Name())
+	if g.CurrentMode().Name() != cmdMode {
+		g.SetCurrentView(activeView.Name())
+		g.SetViewOnTop(activeView.Name())
+	}
 }
 
 func clearView(v *gocui.View) {
