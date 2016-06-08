@@ -112,22 +112,3 @@ func searchForward(v *gocui.View, pattern string, x int, y int) (bool, int, int)
 	}
 	return false, 0, 0
 }
-
-// Moves the cursor relatively to the origin of the view
-func moveTo(v *gocui.View, x int, y int) error {
-	_, yOrigin := v.Origin()
-	_, ySize := v.Size()
-
-	if y <= ySize {
-
-		v.SetCursor(x, y)
-		return nil
-	}
-
-	// how many times we move from the size of the window
-	i := y / ySize
-	y = y % ySize
-	v.SetOrigin(0, yOrigin+i*ySize)
-	v.SetCursor(x, y)
-	return nil
-}
