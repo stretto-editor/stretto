@@ -27,9 +27,7 @@ func search(g *gocui.Gui, input string) error {
 	v := g.Workingview()
 
 	if found, x, y := v.SearchForward(input); found == true {
-		v.SetCursor(0, 0)
-		v.SetOrigin(0, 0)
-		v.MoveCursor(x, y, false)
+		v.AbsMoveCursor(x, y, false)
 		return nil
 	}
 
@@ -65,6 +63,8 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 func replaceAll(g *gocui.Gui, pattern, replacement string) {
 	v := g.Workingview()
+	v.SetCursor(0, 0)
+	v.SetOrigin(0, 0)
 
 	found, x, y := v.SearchForward(pattern)
 	for found {
@@ -74,9 +74,7 @@ func replaceAll(g *gocui.Gui, pattern, replacement string) {
 }
 
 func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
-	v.SetCursor(0, 0)
-	v.SetOrigin(0, 0)
-	v.MoveCursor(x, y, false)
+	v.AbsMoveCursor(x, y, false)
 	for i := 0; i < len(oldstring); i++ {
 		v.EditDelete(false)
 	}
