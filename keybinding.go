@@ -36,15 +36,15 @@ func initKeybindings(g *gocui.Gui) error {
 
 		// ---------------------- COMMON COMMANDS ------------------------- //
 
-		{m: fileMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
-		{m: fileMode, v: "", k: gocui.KeyF2, h: switchModeHandlerFactory(editMode)},
-		{m: fileMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: fileMode, v: "main", k: gocui.KeyF2, h: switchModeHandlerFactory(editMode)},
+		{m: fileMode, v: "main", k: gocui.KeyCtrlQ, h: quitHandler},
 
-		{m: editMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
-		{m: editMode, v: "", k: gocui.KeyF2, h: switchModeHandlerFactory(fileMode)},
-		{m: editMode, v: "", k: gocui.KeyCtrlQ, h: quitHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(cmdMode)},
+		{m: editMode, v: "main", k: gocui.KeyF2, h: switchModeHandlerFactory(fileMode)},
+		{m: editMode, v: "main", k: gocui.KeyCtrlQ, h: quitHandler},
 
-		{m: cmdMode, v: "", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(editMode)},
+		{m: cmdMode, v: "cmdline", k: gocui.KeyCtrlT, h: switchModeHandlerFactory(editMode)},
 
 		// ---------------------- MAIN SECTION ---------------------------- //
 
