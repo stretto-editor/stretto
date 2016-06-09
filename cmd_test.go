@@ -14,7 +14,7 @@ func TestValidateCmd(t *testing.T) {
 	defer g.Close()
 
 	// unauthorized calls : not from the cmdline
-	v, _ := g.View("main")
+	v := g.Workingview()
 	assert.Panics(t, func() { validateCmd(g, v) }, "Cmdline is not the current view")
 }
 
@@ -39,14 +39,15 @@ func TestOpenCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
 	vError, _ := g.View("error")
 	filename := "Commands.md"
 	writeInView(v, "o "+filename)
 	validateCmd(g, v)
-	f, err := os.Open(filename)
+	/*f, err := os.Open(filename)
 	assert.Nil(t, err, err)
-	content, _ := ioutil.ReadAll(f)
+	content, _ := ioutil.ReadAll(f)*/
+	content := getContentFile(filename)
+	vMain := g.Workingview()
 	assert.Equal(t, string(content)+"\n", vMain.Buffer(), "vMain should contains the content of "+filename)
 
 	v.EditWrite('o')
@@ -62,11 +63,11 @@ func TestCloseCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	writeInView(v, "c!")
 	validateCmd(g, v)
-	assert.Equal(t, "undefined", vMain.Title, "Title of the main view should be undefined")
-	assert.Equal(t, "", vMain.Buffer(), "The buffer of the main view should be undefined")
+	assert.Equal(t, "", vMain.Title, "Title of the main view should be empty")
+	assert.Equal(t, "", vMain.Buffer(), "The buffer of the main view should be empty")
 
 	//TODO : add an error when there is an unexpected argument
 }
@@ -76,16 +77,16 @@ func TestReplaceAllCmd(t *testing.T) {
 	defer g.Close()
 	v, _ := g.View("cmdline")
 	vError, _ := g.View("error")
-	// this test doesn't work because viewlines are empty so EditDelete doen't work
-	/*	vMain, _ := g.View("main")
-		text := " foo foo foo \n foo \n \n foo"
-		expected := " bar bar bar \n bar \n \n bar\n"
-		writeInView(vMain, text)
-		//need to fill the viewlines
-		writeInView(v, "repall foo bar")
-		validateCmd(g, v)
+	// this test doesn't work because viewlines are empty so EditDelete doesn't work
+	/*vMain, _ := g.View("main")
+	text := " foo foo foo \n foo \n \n foo"
+	expected := " bar bar bar \n bar \n \n bar\n"
+	writeInView(vMain, text)
+	//need to fill the viewlines
+	writeInView(v, "repall foo bar")
+	validateCmd(g, v)
 
-		assert.Equal(t, expected, vMain.Buffer(), "all the words equal to the pattern should be replaced")
+	assert.Equal(t, expected, vMain.Buffer(), "all the words equal to the pattern should be replaced")
 	*/
 	//without arguments
 	writeInView(v, "repall")
@@ -102,7 +103,8 @@ func TestSetWrapCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
 
 	writeInView(v, "setwrap true")
@@ -135,8 +137,10 @@ func TestQuitAndSaveCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	writeInView(v, "qs")
-	currentFile = "6u8Y73wHm5QWmgRPcXk96y39cL.txt"
+	vMain.Title = "6u8Y73wHm5QWmgRPcXk96y39cL.txt"
 
 }
 
@@ -144,7 +148,8 @@ func TestSaveAsCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
 	text := "This is a \n test on two lines"
 	filename := "r9w92W2Cn7MTtAhuCP5si2LH356r8FrjV.txt"
@@ -177,9 +182,10 @@ func TestSaveAndCloseCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
-	currentFile = ""
+	vMain.Title = ""
 	text := "This is a \n test on two lines"
 	filename := "r9w92W2Cn7MTtAhuCP5si2LH356r8FrjV.txt"
 	//save with no current file
@@ -187,23 +193,23 @@ func TestSaveAndCloseCmd(t *testing.T) {
 	writeInView(v, "sc "+filename)
 	validateCmd(g, v)
 	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content")
-	assert.Equal(t, "", currentFile, "the current file name should be empty")
-	assert.Equal(t, "", vMain.Buffer(), "the view should be empty")
+	_, err1 := g.View(filename)
+	assert.Equal(t, err1, gocui.ErrUnknownView, "view not distroyed")
 
 	//save with a current file
-	clearView(vMain)
-	currentFile = filename
+	vMain = g.Workingview()
+	vMain.Title = filename
 	text = "I'm trying to save \n and close an opened file"
 	writeInView(vMain, text)
-	writeInView(v, "sc ")
+	writeInView(v, "sc")
 	validateCmd(g, v)
 	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content")
-	assert.Equal(t, "", currentFile, "the current file name should be empty")
-	assert.Equal(t, "", vMain.Buffer(), "the view should be empty")
+	_, err2 := g.View(filename)
+	assert.Equal(t, err2, gocui.ErrUnknownView, "view not distroyed")
 	os.Remove(filename)
 
 	//try to save without a current file name and without an argument
-	currentFile = ""
+	vMain.Title = ""
 	writeInView(v, "sc")
 	validateCmd(g, v)
 	assert.Contains(t, vError.Buffer(), ErrMissingFilename.Error(), "missing filename error")
@@ -213,7 +219,7 @@ func TestSaveAndQuitCmd(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	vMain, _ := g.View("main")
+	vMain := g.Workingview()
 	vError, _ := g.View("error")
 
 	text := "This is a \n test on two lines"
@@ -222,15 +228,60 @@ func TestSaveAndQuitCmd(t *testing.T) {
 	writeInView(vMain, text)
 	writeInView(v, "sq "+filename)
 	err := validateCmd(g, v)
-	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content")
+	assert.Equal(t, text, getContentFile(filename), "the save file doesn't contain the right content ")
 	assert.EqualError(t, err, gocui.ErrQuit.Error(), "Errquit should be returned from validatecmd when sq is executed")
 	os.Remove(filename)
 
 	//try to save without a current file name and without an argument
-	currentFile = ""
+	vMain.Title = ""
 	writeInView(v, "sq")
 	validateCmd(g, v)
 	assert.Contains(t, vError.Buffer(), ErrMissingFilename.Error(), "missing filename error ")
+}
+
+func TestGoToCmd(t *testing.T) {
+	g := initGui()
+	defer g.Close()
+	v, _ := g.View("cmdline")
+	vMain := g.Workingview()
+	vError, _ := g.View("error")
+	filename := "Commands.md"
+	//basic conditions
+	v.SetCursor(0, 0)
+	v.SetOrigin(0, 0)
+	writeInView(vMain, getContentFile(filename))
+	writeInView(v, "goto 10 10")
+	validateCmd(g, v)
+	//viewlines == nil --> moveDown does nothing
+	cx, _ := vMain.Cursor()
+	//cx, cy := vMain.Cursor()
+	//assert.Equal(t, 10, cy, "the y coordonate of the cursor should be 10 "+vMain.Title)
+	assert.Equal(t, 10, cx, "the x coordonate of the cursor should be 10")
+
+	v.SetCursor(0, 0)
+	v.SetOrigin(0, 0)
+	//outside of the view, need to move down
+	writeInView(v, "goto 40")
+	validateCmd(g, v)
+	cx, _ = v.Cursor()
+	//cx, cy = v.Cursor()
+	//viewlines == nil --> moveDown does nothing
+	//assert.Equal(t, cy, 40, "the y coordonate of the cursor should be 10 "+vMain.Title)
+	assert.Equal(t, cx, 0, "the x coordonate of the cursor should be 10")
+
+	//invalide parameter
+	writeInView(v, "goto a")
+	validateCmd(g, v)
+	assert.Contains(t, vError.Buffer(), ErrNumberExpected.Error(), "number expected error should be raised")
+	//invalide parameter
+	writeInView(v, "goto 10 b")
+	validateCmd(g, v)
+	assert.Contains(t, vError.Buffer(), ErrNumberExpected.Error(), "number expected error should be raised")
+
+	vMain.Wrap = true
+	writeInView(v, "goto 10 10")
+	validateCmd(g, v)
+	assert.Contains(t, vError.Buffer(), ErrGoToInWrapMode.Error(), "wrap is not allowed with goto")
 }
 
 func writeInView(v *gocui.View, s string) {
@@ -240,7 +291,10 @@ func writeInView(v *gocui.View, s string) {
 }
 
 func getContentFile(filename string) string {
-	f, _ := os.Open(filename)
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
 	content, _ := ioutil.ReadAll(f)
 	return string(content)
 }

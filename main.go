@@ -36,8 +36,11 @@ func main() {
 	if err := initKeybindings(g); err != nil {
 		log.Fatalln(err)
 	}
+	initCommands()
 	g.Cursor = true
 	g.SetCurrentMode(editMode)
+
+	initConfig(g)
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		g.Close()

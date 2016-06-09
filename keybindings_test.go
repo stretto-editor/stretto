@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -21,7 +22,24 @@ func initGui() *gocui.Gui {
 	os.Args = []string{"main"}
 	// since we do not enter gui's mainloop in any test
 	initKeybindings(g)
+	initCommands()
 	return g
+}
+
+func TestPermutLines(t *testing.T) {
+	g := initGui()
+	defer g.Close()
+
+	v := g.CurrentView()
+	fmt.Fprint(v, "foo\nbar")
+	v.SetOrigin(0, 0)
+	v.SetCursor(1, 0)
+
+	permutLinesDownHandler(g, v)
+	assert.Equal(t, "bar\nfoo\n", v.Buffer())
+
+	permutLinesUpHandler(g, v)
+	assert.Equal(t, "foo\nbar\n", v.Buffer())
 }
 
 func TestInitMode(t *testing.T) {
@@ -68,7 +86,8 @@ func TestDoSwitchMode2(t *testing.T) {
 
 	e = doSwitchMode(g, "file")
 	assert.NoError(t, e)
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Equal(t, v, g.CurrentView(), "current view should be main")
 	if assert.NotNil(t, g.CurrentView()) {
 		assert.Equal(t, g.CurrentView().Editable, false, "current view should not be editable")
@@ -76,7 +95,8 @@ func TestDoSwitchMode2(t *testing.T) {
 
 	e = doSwitchMode(g, "edit")
 	assert.NoError(t, e)
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Equal(t, g.CurrentView(), v, "current view should be main")
 	if assert.NotNil(t, g.CurrentView()) {
 		assert.Equal(t, g.CurrentView().Editable, true, "current view should be editable")
@@ -137,7 +157,8 @@ func TestValidateInput(t *testing.T) {
 
 	// unauthorized calls :
 	// 1 not from the inputline
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Panics(t, func() { validateInput(g, v) }, "Inputline is not the current view")
 
 	// 2 no function to use the input
@@ -160,13 +181,15 @@ func TestDoEscapeInput(t *testing.T) {
 	currentDemonInput = emptyDemon
 	v, _ = g.View("inputline")
 	doEscapeInput(g, v)
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Equal(t, g.CurrentView(), v, "current view should be the main view")
 	assert.Nil(t, currentDemonInput, "there should not be any demon waiting")
 
 	// unauthorized calls :
 	// 1 not from the inputline
-	v, _ = g.View("main")
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	assert.Panics(t, func() { doEscapeInput(g, v) }, "Inputline is not the current view")
 
 	// 2 no function to use the input
@@ -179,7 +202,7 @@ func TestDoCursorInfo(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 
-	g.SetCurrentView("main")
+	// g.SetCurrentView("main")
 	g.CurrentView().SetCursor(4, 5)
 	inMainView, _, _ := cursorInfo(g)
 	//rx, ry := g.CurrentView().Cursor()
@@ -211,7 +234,7 @@ func TestDoInfoView(t *testing.T) {
 	assert.Equal(t, v, v2, "The view should be command info")
 	assert.Nil(t, e)
 
-	e = quitInfo(g, v)
+	e = quitTmpView(g, v)
 	assert.Nil(t, e)
 
 	_, e = g.View("cmdinfo")
@@ -223,7 +246,9 @@ func TestDoQuitHandler(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("inputline")
-	currentFile = "unknownfile"
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
+	vMain.Title = "unknownfile"
 
 	// espace with an empty input
 	e := quitHandler(g, v)
@@ -232,7 +257,7 @@ func TestDoQuitHandler(t *testing.T) {
 	e = validateInput(g, v)
 	assert.Nil(t, e, "Input shoud be valid")
 
-	currentFile = ""
+	vMain.Title = ""
 
 	e = quitHandler(g, v)
 	assert.Nil(t, e, "No error should be found")
@@ -250,13 +275,13 @@ func TestDoCopy(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	teststring := "testinput"
-	_, e := g.View("main")
+	//_, e := g.View("main")
 
 	c := exec.Command("xclip", "-i")
 	c.Stdin = strings.NewReader(teststring)
 	c.Start()
 
-	e = copy()
+	e := copy()
 	assert.Nil(t, e)
 
 	out, _ := exec.Command("xclip", "-o", "-selection", "c").Output()
@@ -270,7 +295,8 @@ func TestDoPaste(t *testing.T) {
 	}
 
 	g := initGui()
-	v, _ := g.View("main")
+	// v, _ := g.View("main")
+	v := g.Workingview()
 	defer g.Close()
 	teststring := "testinput"
 
@@ -301,6 +327,8 @@ func TestDoOpenHandler(t *testing.T) {
 	// possible errors of called functions already tested in test_cmd
 	g := initGui()
 	defer g.Close()
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
 
 	v, _ := g.View("inputline")
 	openFileHandler(g, v)
@@ -310,14 +338,14 @@ func TestDoOpenHandler(t *testing.T) {
 	v.EditWrite('y')
 	validateInput(g, v)
 
-	currentFile = ""
+	vMain.Title = ""
 	closeFileHandler(g, v)
 	v.EditWrite('y')
 	validateInput(g, v)
 	v.EditWrite('a')
 	validateInput(g, v)
 
-	currentFile = ""
+	vMain.Title = ""
 	closeFileHandler(g, v)
 	v.EditWrite('n')
 	validateInput(g, v)
@@ -329,19 +357,39 @@ func TestDoSaveHandler(t *testing.T) {
 	// possible errors of called functions already tested in test_cmd
 	g := initGui()
 	defer g.Close()
-
-	currentFile = ""
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
+	vMain.Title = ""
 
 	v, _ := g.View("inputline")
 	saveHandler(g, v)
 	v.EditWrite('c')
 
-	currentFile = "c"
-	v, _ = g.View("main")
+	vMain.Title = "c"
+	// v, _ = g.View("main")
+	v = g.Workingview()
 	v.EditWrite('k')
 	v, _ = g.View("inputline")
 	saveHandler(g, v)
 
 	validateInput(g, v)
 	os.Remove("c")
+}
+
+func TestSwitchBuffer(t *testing.T) {
+
+	g := initGui()
+	defer g.Close()
+
+	err := openAndDisplayFile(g, "Commands.md")
+	assert.Nil(t, err, "No error should be found")
+	err = openAndDisplayFile(g, "LICENSE")
+	assert.Nil(t, err, "No error should be found")
+
+	switchBufferBackward(g, nil)
+	assert.Equal(t, g.Workingview().Name(), "Commands.md", "Wrong working view")
+
+	switchBufferForward(g, nil)
+	assert.Equal(t, g.Workingview().Name(), "LICENSE", "Wrong working view")
+
 }

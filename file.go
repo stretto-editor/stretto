@@ -15,8 +15,30 @@ func createFile(filename string) {
 		var file *os.File
 		file, _ = os.Create(filename)
 		file.Close()
-		currentFile = filename
 	}
+}
+
+func saveHandler(g *gocui.Gui, v *gocui.View) error {
+	// vMain, _ := g.View("main")
+	vMain := g.Workingview()
+	if vMain.Title == "" {
+		currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+			createFile(input)
+			vMain.Title = input
+			if err := saveMain(vMain, vMain.Title); err != nil {
+				return nil, err
+			}
+			return nil, nil
+		}
+
+		interactive(g, "Save")
+		return nil
+	}
+
+	if err := saveMain(vMain, vMain.Title); err != nil {
+		return err
+	}
+	return nil
 }
 
 func saveMain(v *gocui.View, filename string) error {
@@ -51,19 +73,99 @@ func saveMain(v *gocui.View, filename string) error {
 	return nil
 }
 
+func quitHandler(g *gocui.Gui, v *gocui.View) error {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+		if input != "n" {
+			// vMain, _ := g.View("main")
+			vMain := g.Workingview()
+			if vMain.Title == "" {
+				interactive(g, "File name")
+				return func(g *gocui.Gui, input string) (demonInput, error) {
+
+					createFile(input)
+					vMain.Title = input
+					if err := saveMain(vMain, vMain.Title); err != nil {
+						return nil, err
+					}
+
+					return nil, gocui.ErrQuit
+				}, nil
+
+			}
+			if err := saveMain(vMain, vMain.Title); err != nil {
+				return nil, err
+			}
+		}
+		return nil, gocui.ErrQuit
+	}
+
+	interactive(g, "Save Modifications (y/n)")
+	return nil
+}
+
+func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+		// vMain, _ := g.View("main")
+		vMain := g.Workingview()
+		if input != "n" {
+			if vMain.Title == "" {
+				interactive(g, "File name")
+				return func(g *gocui.Gui, input string) (demonInput, error) {
+					createFile(input)
+					vMain.Title = input
+					if err := saveMain(vMain, vMain.Title); err != nil {
+						return nil, err
+					}
+					closeView(g, vMain)
+					return nil, nil
+				}, nil
+			}
+			if err := saveMain(vMain, vMain.Title); err != nil {
+				return nil, err
+			}
+		}
+		closeView(g, vMain)
+		return nil, nil
+	}
+
+	interactive(g, "Save Modifications (y/n)")
+	return nil
+}
+
+func openFileHandler(g *gocui.Gui, v *gocui.View) error {
+	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
+		return nil, openAndDisplayFile(g, input)
+	}
+	interactive(g, "Open File")
+	return nil
+}
+
 func openAndDisplayFile(g *gocui.Gui, filename string) error {
-	v, _ := g.View("main")
+	v, _ := newFileView(g, filename)
+	g.SetWorkingView(v.Name())
+	if g.CurrentMode().Name() != cmdMode {
+		g.SetCurrentView(v.Name())
+	}
+	// g.SetViewOnTop(v.Name())
 	err := openFile(v, filename)
 	if err == nil {
-		currentFile = filename
 		v.Title = filename
 		return nil
 	}
 	return fmt.Errorf("Could not open file : %s", filename)
 }
 
+func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
+	currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
+		return nil, saveAs(g, filename)
+	}
+	interactive(g, "Save as")
+	return nil
+}
+
 func saveAs(g *gocui.Gui, filename string) error {
-	v, _ := g.View("main")
+	//v, _ := g.View("main")
+	v := g.Workingview()
 	createFile(filename)
 	return saveMain(v, filename)
 }

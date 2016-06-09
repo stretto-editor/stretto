@@ -24,37 +24,25 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 }
 
 func search(g *gocui.Gui, input string) error {
-	v, _ := g.View("main")
-	x, y := v.Cursor()
+	v := g.Workingview()
 
-	if found, newx, newy := searchForward(v, input, x, y); found == true {
-		moveTo(v, newx, newy)
+	if found, x, y := v.SearchForward(input); found == true {
+		v.AbsMoveCursor(x, y, false)
 		return nil
 	}
 
 	return fmt.Errorf("Could not find pattern \"%s\" forward", input)
 }
 
-func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
-	moveTo(v, x, y)
-	for i := 0; i < len(oldstring); i++ {
-		v.EditDelete(false)
-	}
-
-	for _, c := range newstring {
-		v.EditWrite(c)
-	}
-}
-
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		v, _ := g.View("main")
-		x, y := v.Cursor()
-		var xnew, ynew int
+
+		v := g.Workingview()
+		var x, y int
 		var found bool
 
-		if found, xnew, ynew = searchForward(v, input, x, y); !found {
+		if found, x, y = v.SearchForward(input); !found {
 			return nil, fmt.Errorf("Could not find pattern \"%s\" forward", input)
 		}
 
@@ -62,8 +50,8 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 		interactive(g, "Search and replace - Replace string")
 
 		return func(g *gocui.Gui, input string) (demonInput, error) {
-			v, _ := g.View("main")
-			replaceAt(v, xnew, ynew, searched, input)
+			v := g.Workingview()
+			replaceAt(v, x, y, searched, input)
 			return nil, nil
 		}, nil
 
@@ -71,6 +59,28 @@ func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
 
 	interactive(g, "Search and replace - Search string")
 	return nil
+}
+
+func replaceAll(g *gocui.Gui, pattern, replacement string) {
+	v := g.Workingview()
+	v.SetCursor(0, 0)
+	v.SetOrigin(0, 0)
+
+	found, x, y := v.SearchForward(pattern)
+	for found {
+		replaceAt(v, x, y, pattern, replacement)
+		found, x, y = v.SearchForward(pattern)
+	}
+}
+
+func replaceAt(v *gocui.View, x, y int, oldstring, newstring string) {
+	v.AbsMoveCursor(x, y, false)
+	for i := 0; i < len(oldstring); i++ {
+		v.EditDelete(false)
+	}
+	for _, c := range newstring {
+		v.EditWrite(c)
+	}
 }
 
 // func gives how to move from the current origin
@@ -101,26 +111,4 @@ func searchForward(v *gocui.View, pattern string, x int, y int) (bool, int, int)
 		}
 	}
 	return false, 0, 0
-}
-
-// Moves the cursor relatively to the origin of the view
-func moveTo(v *gocui.View, x int, y int) error {
-	_, yOrigin := v.Origin()
-	_, ySize := v.Size()
-
-	if y <= ySize {
-
-		v.SetCursor(x, y)
-		return nil
-	}
-
-	// how many times we move from the size of the window
-	var i int
-	for i = 0; y > ySize; i++ {
-		y -= ySize
-
-	}
-	v.SetOrigin(0, yOrigin+i*ySize)
-	v.SetCursor(x, y)
-	return nil
 }
