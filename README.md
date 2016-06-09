@@ -26,11 +26,29 @@ Please see the [user documentation](Commands.md) for usage.
 # Installation
 
 ```
-wget .. && install.sh
-sudo mv ~/stretto ~/Commands.md /usr/bin/
+wget https://raw.githubusercontent.com/stretto-editor/stretto/master/install.sh
+chmod +x install.sh
+./install.sh
 ```
 
 # Easy setup
+
+After the installation you will find stretto executable and Commands.md file in
+your home directory. If you want to move them to another directory such as
+/usb/bin, keep these two files together to get documentation in the application.
+
+You'll find a hidden configuration file in your home directory named
+stretto.json after the installation which will allow you to configure some
+features such as :
+
+* View color
+* Background color
+* Visible cursor
+* Highlighting of current line
+* Activate wrap
+
+Warning : you can change the parameters but do not delete one of the
+attributes in the configuration file.
 
 
 # Road-Map
@@ -55,7 +73,7 @@ The architecture model is MVC. Please respect this model as much as possible.
 
 TODO :
  * Increase the gap between the buffer and the view in order to have a real
-tabulation and eventually and syntax highlighting.
+tabulation and eventually syntax highlighting.
  * For the View, split SetView and create to functions. One for creation and
 initialization and an other one for updating fields.
  * Create logs and bug reports to easing the developpement
