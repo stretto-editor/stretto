@@ -80,26 +80,27 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 's', h: saveHandler},
 		{m: fileMode, v: "main", k: 'u', h: saveAsHandler},
 		{m: fileMode, v: "main", k: 'f', h: searchHandler},
-		{m: fileMode, v: "main", k: 'b', h: docHandler},
-		{m: fileMode, v: "main", k: 'm', h: dirInfoHandler},
+		{m: fileMode, v: "main", k: 'd', h: dirInfoHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlD, h: dirInfoHandler},
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: historicHandler},
 		{m: editMode, v: "", k: gocui.KeyCtrlZ, h: undoHandler},
 		{m: editMode, v: "", k: gocui.KeyCtrlY, h: redoHandler},
-		//{m: editMode, v: "main", k: gocui.KeyCtrlD, h: testCmdWrite}, // TODO : deleted this
 
 		{m: editMode, v: "main", k: gocui.KeyCtrlO, h: openFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlW, h: closeFileHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlS, h: saveHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlU, h: saveAsHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlF, h: searchHandler},
-		{m: editMode, v: "main", k: gocui.KeyCtrlB, h: docHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlP, h: searchAndReplaceHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlC, h: copyHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlV, h: pasteHandler},
 		{m: editMode, v: "main", k: gocui.KeyEnter, h: breaklineHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlJ, h: permutLinesUpHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlK, h: permutLinesDownHandler},
+
+		{m: fileMode, v: "main", k: gocui.KeyF3, h: docHandler},
+		{m: editMode, v: "main", k: gocui.KeyF3, h: docHandler},
 
 		// ---------------------- INFO SECTION ---------------------------- //
 
