@@ -53,11 +53,12 @@ func TestAutocompleteDir(t *testing.T) {
 	g := initGui()
 	defer g.Close()
 	v, _ := g.View("cmdline")
-	writeInView(v, "open ../str")
+	writeInView(v, "open ./r9w92W2Cn7MT")
+	os.Mkdir("r9w92W2Cn7MTtAhuCP5si2LxwP9UrmC6Y99", 0777)
 	AutocompleteCmd(g, v)
-	assert.Equal(t, "open ../stretto/\n", v.Buffer(),
-		"\"../s\" should be completed  by \"../stretto\" "+
-			"(\"stretto\" have to be the only file or directory which name begins with  \"str\")")
+	assert.Equal(t, "open ./r9w92W2Cn7MTtAhuCP5si2LxwP9UrmC6Y99/\n", v.Buffer(),
+		"\"r9w92W2Cn7MT\" should be completed  by \"r9w92W2Cn7MTtAhuCP5si2LxwP9UrmC6Y99/\"")
+	os.Remove("r9w92W2Cn7MTtAhuCP5si2LxwP9UrmC6Y99")
 }
 
 func TestAutocompleteTooMuchArg(t *testing.T) {

@@ -375,3 +375,21 @@ func TestDoSaveHandler(t *testing.T) {
 	validateInput(g, v)
 	os.Remove("c")
 }
+
+func TestSwitchBuffer(t *testing.T) {
+
+	g := initGui()
+	defer g.Close()
+
+	err := openAndDisplayFile(g, "Commands.md")
+	assert.Nil(t, err, "No error should be found")
+	err = openAndDisplayFile(g, "LICENSE")
+	assert.Nil(t, err, "No error should be found")
+
+	switchBufferBackward(g, nil)
+	assert.Equal(t, g.Workingview().Name(), "Commands.md", "Wrong working view")
+
+	switchBufferForward(g, nil)
+	assert.Equal(t, g.Workingview().Name(), "LICENSE", "Wrong working view")
+
+}
