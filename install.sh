@@ -28,11 +28,14 @@ elif [ "$OSTYPE" == "linux-gnu" ]; then
   go get github.com/stretto-editor/stretto
   cd $GOPATH/src/github.com/stretto-editor/stretto
   go install
+  mv stretto.json $HOME/.stretto.json
+  mv Commands.md $HOME
   mv $GOPATH/bin/stretto $HOME
   cd $HOME
   rm -rf /tmp/strettotemp
   echo "----> Installation of Stretto completed"
   echo "-----> Stretto application is now in $HOME"
+  echo "-----> You can now move stretto and Commands.md file to your /usr/bin"
 
 
 fi

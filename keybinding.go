@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/stretto-editor/gocui"
@@ -227,7 +228,8 @@ func docHandler(g *gocui.Gui, v *gocui.View) error {
 	if v, err := newTmpView(g, "cmdinfo"); err != gocui.ErrUnknownView {
 		displayError(g, err)
 	} else {
-		openFile(v, "Commands.md")
+		dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		openFile(v, dir+"/Commands.md")
 		g.SetViewOnTop(v.Name())
 		g.SetCurrentView(v.Name())
 	}
