@@ -206,18 +206,6 @@ func redoHandler(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-/*
-//TODO : deleted this (debug only)
-func testCmdWrite(g *gocui.Gui, v *gocui.View) error {
-	cx, cy := v.Cursor()
-	s := 'T'
-	c := gocui.NewWriteCmd(v, cx, cy, s)
-	v.Actions.Exec(c)
-	g.UpdateHistoric()
-	return nil
-}
-*/
-
 func breaklineHandler(g *gocui.Gui, v *gocui.View) error {
 	v.EditNewLine()
 	updateInfos(g)
@@ -233,29 +221,6 @@ func interactive(g *gocui.Gui, s string) {
 
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
-}
-
-func saveHandler(g *gocui.Gui, v *gocui.View) error {
-	// vMain, _ := g.View("main")
-	vMain := g.Workingview()
-	if vMain.Title == "" {
-		currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-			createFile(input)
-			vMain.Title = input
-			if err := saveMain(vMain, vMain.Title); err != nil {
-				return nil, err
-			}
-			return nil, nil
-		}
-
-		interactive(g, "Save")
-		return nil
-	}
-
-	if err := saveMain(vMain, vMain.Title); err != nil {
-		return err
-	}
-	return nil
 }
 
 func docHandler(g *gocui.Gui, v *gocui.View) error {
@@ -315,65 +280,6 @@ func displayDirectoryContent(v *gocui.View, files []os.FileInfo) {
 			fmt.Fprintln(v, " "+file.Name())
 		}
 	}
-}
-
-func quitHandler(g *gocui.Gui, v *gocui.View) error {
-	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		if input != "n" {
-			// vMain, _ := g.View("main")
-			vMain := g.Workingview()
-			if vMain.Title == "" {
-				interactive(g, "File name")
-				return func(g *gocui.Gui, input string) (demonInput, error) {
-
-					createFile(input)
-					vMain.Title = input
-					if err := saveMain(vMain, vMain.Title); err != nil {
-						return nil, err
-					}
-
-					return nil, gocui.ErrQuit
-				}, nil
-
-			}
-			if err := saveMain(vMain, vMain.Title); err != nil {
-				return nil, err
-			}
-		}
-		return nil, gocui.ErrQuit
-	}
-
-	interactive(g, "Save Modifications (y/n)")
-	return nil
-}
-
-func closeFileHandler(g *gocui.Gui, v *gocui.View) error {
-	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		// vMain, _ := g.View("main")
-		vMain := g.Workingview()
-		if input != "n" {
-			if vMain.Title == "" {
-				interactive(g, "File name")
-				return func(g *gocui.Gui, input string) (demonInput, error) {
-					createFile(input)
-					vMain.Title = input
-					if err := saveMain(vMain, vMain.Title); err != nil {
-						return nil, err
-					}
-					closeView(g, vMain)
-					return nil, nil
-				}, nil
-			}
-			if err := saveMain(vMain, vMain.Title); err != nil {
-				return nil, err
-			}
-		}
-		closeView(g, vMain)
-		return nil, nil
-	}
-
-	interactive(g, "Save Modifications (y/n)")
-	return nil
 }
 
 func closeView(g *gocui.Gui, v *gocui.View) {
@@ -535,22 +441,6 @@ func pasteHandler(g *gocui.Gui, v *gocui.View) error {
 		displayError(g, err)
 	}
 	updateInfos(g)
-	return nil
-}
-
-func openFileHandler(g *gocui.Gui, v *gocui.View) error {
-	currentDemonInput = func(g *gocui.Gui, input string) (demonInput, error) {
-		return nil, openAndDisplayFile(g, input)
-	}
-	interactive(g, "Open File")
-	return nil
-}
-
-func saveAsHandler(g *gocui.Gui, v *gocui.View) error {
-	currentDemonInput = func(g *gocui.Gui, filename string) (demonInput, error) {
-		return nil, saveAs(g, filename)
-	}
-	interactive(g, "Save as")
 	return nil
 }
 
