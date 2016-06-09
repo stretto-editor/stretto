@@ -31,6 +31,7 @@ Edition   | File      | Actions
 F3        | F3        | Open documentation
 Ctrl+D    | D         | Display the content of a directory
 Ctrl+O    | O         | Open a file
+Ctrl+N    | N         | Open a new empty file
 Ctrl+W    | W         | Close the current file
 Ctrl+Q    | Ctrl+Q    | Quit
 
@@ -48,7 +49,7 @@ Ctrl+C    |           | Copy (available on Linux with xclip installed)
 Ctrl+V    |           | Paste (available on Linux with xclip installed)
 Ctrl+Z    |           | Undo last action
 Ctrl+Y    |           | Redo last undone action
-Ctrl+N    |           | Display historic of the current view (Undo/Redo stack)
+Ctrl+L    |           | Display historic of the current view (Undo/Redo stack)
 Ctrl+J    |           | Permute the current line with the previous one
 Ctrl+K    |           | Permute the current line with the next one
 

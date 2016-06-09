@@ -20,7 +20,24 @@ The **Command** mode is made to do complex actions.
 
 Please see the [user documentation](Commands.md) for usage.
 
-## Features & Screeshots
+## Some features & Screeshots
+
+#### User Interface
+![ihm](https://cloud.githubusercontent.com/assets/17803473/15940756/c37d8d48-2e7d-11e6-82fd-08162dabb0d1.png)
+ * 1: Main area where files are displayed
+ * 2: Line for interactive action in Edit and File mode
+ * 3: Error section for feedbacks
+ * 4: Info view
+
+#### Do-Undo-Redo
+![undo](https://cloud.githubusercontent.com/assets/17803473/15940784/daddb526-2e7d-11e6-9d44-b9e1e0fd7cc2.png)
+A representation of actions done. Somme of them are Undone.
+
+#### Theme
+![theme](https://cloud.githubusercontent.com/assets/17803473/15940781/da6f5018-2e7d-11e6-9ba5-83220996e43e.png)
+A personalization thanks to stretto.json
+
+There are many more features. Just be curious !
 
 
 # Installation
