@@ -1,5 +1,6 @@
 # Stretto
 **An editor right from the 22nd century**
+![cover logo](/assets/cover_1000.png)
 
 See [GitHub Pages](http://stretto-editor.github.io/) to join the project and [Facebook](https://www.facebook.com/Stretto-841328495972117/?fref=ts) to follow our news.
 
