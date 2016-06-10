@@ -19,7 +19,11 @@ func searchHandler(g *gocui.Gui, v *gocui.View) error {
 		return nil, search(g, input)
 	}
 
-	interactive(g, "Search")
+	if v.GetSearchString() == "" {
+		interactive(g, "Search")
+	} else {
+		interactive(g, "Search [" + v.GetSearchString() + "]")
+	}
 	return nil
 }
 
@@ -31,7 +35,7 @@ func search(g *gocui.Gui, input string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Could not find pattern \"%s\" forward", input)
+	return fmt.Errorf("Could not find pattern \"%s\" forward", v.GetSearchString())
 }
 
 func searchAndReplaceHandler(g *gocui.Gui, v *gocui.View) error {
