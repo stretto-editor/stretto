@@ -74,6 +74,9 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: editMode, v: "main", k: gocui.KeyF8, h: switchBufferBackward},
 		{m: fileMode, v: "main", k: gocui.KeyF8, h: switchBufferBackward},
 
+		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: newFileHandler},
+		{m: fileMode, v: "main", k: 'n', h: newFileHandler},
+
 		// ---------------------- USEFUL --- ------------------------------ //
 
 		{m: fileMode, v: "main", k: 'o', h: openFileHandler},
@@ -84,7 +87,7 @@ func initKeybindings(g *gocui.Gui) error {
 		{m: fileMode, v: "main", k: 'd', h: dirInfoHandler},
 		{m: editMode, v: "main", k: gocui.KeyCtrlD, h: dirInfoHandler},
 
-		{m: editMode, v: "main", k: gocui.KeyCtrlN, h: historicHandler},
+		{m: editMode, v: "main", k: gocui.KeyCtrlL, h: historicHandler},
 		{m: editMode, v: "", k: gocui.KeyCtrlZ, h: undoHandler},
 		{m: editMode, v: "", k: gocui.KeyCtrlY, h: redoHandler},
 

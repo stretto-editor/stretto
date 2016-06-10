@@ -18,7 +18,8 @@ elif [ "$OSTYPE" == "linux-gnu" ]; then
   wget https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz
   tar -C ./usr -xzf go1.6.2.linux-amd64.tar.gz
 
-  export PATH=$PATH:/tmp/strettotemp/usr/go/bin
+  export GOROOT=/tmp/strettotemp/usr
+  export PATH=$PATH:$GOROOT/go/bin
   export GOPATH=/tmp/strettotemp/strettoinstall
 
   mkdir strettoinstall

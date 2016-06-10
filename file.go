@@ -18,6 +18,14 @@ func createFile(filename string) {
 	}
 }
 
+func newFileHandler(g *gocui.Gui, v *gocui.View) error {
+	newView, _ := newFileView(g, "file")
+	g.SetViewOnTop(newView.Name())
+	g.SetCurrentView(newView.Name())
+	g.SetWorkingView(newView.Name())
+	return nil
+}
+
 func saveHandler(g *gocui.Gui, v *gocui.View) error {
 	// vMain, _ := g.View("main")
 	vMain := g.Workingview()
