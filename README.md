@@ -87,6 +87,7 @@ Ideas for futures releases:
  * (Un)comment lines
 
 Stuffs that should be done :
+ * Strenghten the test base (we love tests at Stretto)
  * Get rid of Gocui dependency by developping a new GUI architecture
  * Increase the gap between the buffer and the view in order to have a real
 tabulation and eventually syntax highlighting.
@@ -101,7 +102,8 @@ initialization and an other one for updating fields.
 
 # About
 ## Contribution
-
+**Please read before contributing**
+### Code sturcture
 Stretto is developped in Golang. See https://golang.org/doc/install or for
 more details.
 
@@ -109,6 +111,16 @@ The architecture model is MVC. Please respect this model as much as possible.
 
 Do not hesitate to contribute and share about the code, the architecture or new features. 
 **Please contact @eric-burel for any further information : [eb@lebrun-burel.com](mailto:eb@lebrun-burel.com)**
+
+### Advice
+
+- Please merge your work on the `dev` branch for new features (except for bug fixes). `master` is only for new versions, patches and fixes.
+- Please unit test your code, **especially for bug fixes**. It would be sad to lost your work because of an unnoticed regression !
+- Please add advice on how to solve the problem when opening an issue if you can, or at least as much details as possible. That would be of great help.
+- Please always use English
+
+Since we are a very small team, most pull requests will be merged without much checking. So please take your own responsibility and test your code before sending PRs ;)
+
 
 ## Licence
 
