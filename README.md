@@ -6,7 +6,7 @@ See [GitHub Pages](http://stretto-editor.github.io/) to join the project and [Fa
 
 ## Presentation
 
-Stretto is a text-based editor halfway beetween modal editors such as Emacs or Vim,
+Stretto is a text-based editor halfway between modal editors such as Emacs or Vim,
 and user-friendly ones such as Atom or SublimeText. Indeed, Stretto has three modes
 but also use nice shortcuts like Ctrl+s to simply save your file.
 
@@ -87,15 +87,15 @@ Ideas for futures releases:
  * (Un)comment lines
 
 Stuffs that should be done :
- * Strenghten the test base (we love tests at Stretto)
- * Get rid of Gocui dependency by developping a new GUI architecture
+ * Strengthen the test base (we love tests at Stretto)
+ * Get rid of Gocui dependency by developing a new GUI architecture
  * Increase the gap between the buffer and the view in order to have a real
 tabulation and eventually syntax highlighting.
  * For the View, split SetView and create to functions. One for creation and
 initialization and an other one for updating fields.
- * Create logs and bug reports to easing the developpement
+ * Create logs and bug reports to easing the development
  * Take all actions into account in Undo/Redo
- * Use the highlighting for next occurence or matching piece
+ * Use the highlighting for next occurrence or matching piece
  * Migrate to a graphical interface
  * Use a cache in case of crash
  * Separate the navigation from the cursor moves
@@ -103,8 +103,8 @@ initialization and an other one for updating fields.
 # About
 ## Contribution
 **Please read before contributing**
-### Code sturcture
-Stretto is developped in Golang. See https://golang.org/doc/install or for
+### Code structure
+Stretto is developed in Golang. See https://golang.org/doc/install or for
 more details.
 
 The architecture model is MVC. Please respect this model as much as possible.
