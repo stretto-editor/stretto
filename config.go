@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/user"
-
+	"path/filepath"
 	"github.com/stretto-editor/gocui"
 )
 
@@ -25,7 +25,8 @@ var userconfig config
 
 func initConfig(g *gocui.Gui) {
 	usr, _ := user.Current()
-	file, e := ioutil.ReadFile(usr.HomeDir + "/.stretto.json")
+	file, e := ioutil.ReadFile(filepath.Join(usr.HomeDir, ".stretto.json"))
+
 	if e != nil {
 		fmt.Printf("File error: %v\n", e)
 		return
